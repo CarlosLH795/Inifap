@@ -1,0 +1,332 @@
+.grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  padding: 20px;
+  font-family: Arial;
+}
+
+.left-panel {
+  background: #e8f5e9;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.temp-box {
+  background: #2e7d32;
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.main .card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.btn-back {
+
+  background: #1976d2;
+
+  color: white;
+
+  border: none;
+
+  padding: 10px 18px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  margin-bottom: 15px;
+
+  font-size: 14px;
+
+}
+
+.btn-back:hover {
+
+  background: #1565c0;
+
+}
+.dashboard {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 100vh;
+  background: #f3f6ef;
+  font-family: Arial, sans-serif;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #315f3b, #16351f);
+  color: white;
+  padding: 24px;
+}
+
+.sidebar h2 {
+  margin-bottom: 30px;
+}
+
+.back-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #eaf4df;
+  color: #1b3b23;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+.weather-main {
+  background: rgba(255,255,255,0.14);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.weather-main p {
+  margin: 0;
+  opacity: .8;
+}
+
+.weather-main h1 {
+  font-size: 54px;
+  margin: 10px 0;
+}
+
+.location {
+  background: rgba(255,255,255,0.1);
+  padding: 16px;
+  border-radius: 14px;
+}
+
+.content {
+  padding: 28px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topbar h1 {
+  margin: 0;
+  color: #1f3324;
+}
+
+.topbar p {
+  margin: 6px 0 0;
+  color: #6f7d6f;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.card span {
+  font-size: 28px;
+}
+
+.card p {
+  color: #6f7d6f;
+  margin: 12px 0 4px;
+}
+
+.card h2 {
+  margin: 0;
+  color: #1f3324;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 18px;
+}
+
+.panel {
+  background: white;
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.panel.large {
+  min-height: 260px;
+}
+
+.chart-placeholder {
+  height: 200px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e7f1df, #f8fbf5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6f7d6f;
+  margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-box {
+  height: 280px;
+  margin-top: 20px;
+}
+
+.date-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.date-controls input,
+select {
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.date-controls button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #2e7d32;
+  color: white;
+  cursor: pointer;
+}
+
+
+.loading-screen {
+  min-height: calc(100vh - 60px);
+  background: #f3f6ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader-card {
+  background: white;
+  padding: 32px;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.08);
+  text-align: center;
+}
+
+.loader-card h2 {
+  color: #1f3324;
+  margin-bottom: 8px;
+}
+
+.loader-card p {
+  color: #6f7d6f;
+}
+
+
+.progress-container {
+  width: 100%;
+  height: 10px;
+  background: #dce6d7;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-top: 20px;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    #2e7d32,
+    #66bb6a
+  );
+  border-radius: 20px;
+  animation: progressMove 1.5s infinite ease-in-out;
+}
+
+@keyframes progressMove {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(350%);
+  }
+}
+.fecha-dashboard {
+  margin-top: 8px;
+  color: #5f6f5f;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+.gdd-loading {
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #315f3b;
+}
+
+.mini-loader {
+  width: 60%;
+  height: 10px;
+  background: #dce6d7;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.mini-loader::before {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, #2e7d32, #66bb6a);
+  border-radius: 20px;
+  animation: miniProgress 1.4s infinite ease-in-out;
+}
+
+@keyframes miniProgress {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+.error-text {
+  color: #c62828;
+  font-weight: bold;
+}

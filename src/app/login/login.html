@@ -1,0 +1,28 @@
+<div class="login-page">
+
+  <div class="login-card">
+
+    <h1>WRF Agro</h1>
+    <p>Iniciar sesión</p>
+
+    <input
+      type="text"
+      placeholder="Usuario"
+      [(ngModel)]="usuario">
+
+    <input
+      type="password"
+      placeholder="Contraseña"
+      [(ngModel)]="password">
+
+    <button (click)="entrar()">Entrar</button>
+
+    @if(error){
+      <div class="error">
+        Usuario o contraseña incorrectos
+      </div>
+    }
+
+  </div>
+
+</div>

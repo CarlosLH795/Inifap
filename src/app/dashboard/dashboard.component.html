@@ -1,0 +1,181 @@
+<app-navbar></app-navbar>
+<div *ngIf="cargando" class="loading-screen">
+  <div class="loader-card">
+    
+     <h2>Cargando información agroclimática...</h2>
+
+    <p>
+      Consultando WRF vigente y humedad de suelo.
+    </p>
+
+    <div class="progress-container">
+      <div class="progress-bar"></div>
+    </div>
+
+<button *ngIf="errorCarga" (click)="volverMapa()">
+  Volver al mapa
+</button>
+  </div>
+  
+</div>
+
+<div *ngIf="!cargando" class="dashboard">
+ 
+
+  <aside class="sidebar">
+
+    <h2>🌱 WRF Agro</h2>
+
+    <button class="back-btn" (click)="volverMapa()">
+      ← Volver al mapa
+    </button>
+
+    <div class="weather-main">
+      <p>Temperatura</p>
+      <h1>{{ diaActual?.temp | number:'1.2-2' }}°C</h1>
+      <span>Punto seleccionado</span>
+    </div>
+
+    <div class="location">
+      <p><b>Lat:</b> {{ lat | number:'1.4-4' }}</p>
+      <p><b>Lon:</b> {{ lon | number:'1.4-4' }}</p>
+    </div>
+
+  </aside>
+
+  <main class="content">
+
+    <div class="topbar">
+      <div>
+        <h1>Dashboard Meteorológico</h1>
+        <p>Resumen climático para el punto WRF seleccionado</p>
+        <p class="fecha-dashboard">
+          Pronóstico vigente: {{ fechaPronostico }}
+        </p>
+      </div>
+    </div>
+
+    <section class="cards" *ngIf="diaActual">
+
+      <div class="card">
+        <span>🌡️</span>
+        <p>Máxima</p>
+        <h2>{{ diaActual?.tmax | number:'1.2-2' }}°C</h2>
+      </div>
+
+      <div class="card">
+        <span>❄️</span>
+        <p>Mínima</p>
+        <h2>{{ diaActual?.tmin | number:'1.2-2' }}°C</h2>
+      </div>
+
+      <div class="card">
+        <span>🌧️</span>
+        <p>Lluvia</p>
+        <h2>{{ diaActual?.rain | number:'1.2-2' }} mm</h2>
+      </div>
+
+      <div class="card">
+        <span>💧</span>
+        <p>Humedad</p>
+        <h2>{{ diaActual?.rh | number:'1.2-2' }}%</h2>
+      </div>
+
+    </section>
+
+    <section class="grid">
+
+     <div class="panel large">
+  <h3>Humedad de suelo</h3>
+
+  <select [(ngModel)]="profundidad" (change)="cargarHumedad()">
+    <option value="0_5">0-5</option>
+    <option value="5_15">5-15</option>
+    <option value="15_30">15-30</option>
+    <option value="30_60">30-60</option>
+    <option value="60_100">60-100</option>
+    <option value="100_200">100-200</option>
+  </select>
+
+  <select [(ngModel)]="variableHumedad" (change)="cargarHumedad()">
+    <option value="soilw010">soilw010</option>
+    <option value="soilw1040">soilw1040</option>
+  </select>
+
+  <p *ngIf="humedad">
+    Estado: {{ humedad.estado.nom_ent }} |
+    PMP: {{ humedad.referencia.pmp }} |
+    CC: {{ humedad.referencia.cc }}
+  </p>
+
+  <div class="chart-box"  *ngIf="humedad">
+    <canvas
+  baseChart
+  #humedadChart="base-chart"
+  [data]="humedadChartData"
+  [options]="humedadChartOptions"
+  [type]="'bar'">
+</canvas>
+  </div>
+</div>
+
+      <div class="panel">
+        <h3>Variables de viento</h3>
+
+        <p><b>U:</b> {{ diaActual?.u | number:'1.2-2' }}</p>
+        <p><b>V:</b> {{ diaActual?.v | number:'1.2-2' }}</p>
+        <p><b>Racha:</b> {{ diaActual?.gust | number:'1.2-2' }}</p>
+
+        
+        <h3>Suelo</h3>
+
+        <p><b>Soil 0-10:</b> {{ diaActual?.soilw010 | number:'1.2-2' }}</p>
+        <p><b>Soil 10-40:</b> {{ diaActual?.soilw1040 | number:'1.2-2' }}</p>
+        <p><b>T suelo 0-10:</b> {{ diaActual?.tsoil010 | number:'1.2-2' }}</p>
+      </div>
+
+      
+      <div class="panel large">
+        <h3>Histórico GDD</h3>
+
+        <div class="date-controls">
+          <input type="date" [(ngModel)]="fechaInicio">
+          <input type="date" [(ngModel)]="fechaFin">
+
+          <button (click)="cargarHistorico()">
+            Consultar histórico
+          </button>
+        </div>
+
+        <div *ngIf="cargandoHistorico" class="gdd-loading">
+  <div class="mini-loader"></div>
+  <p>Cargando histórico GDD...</p>
+</div>
+
+<div class="chart-box" *ngIf="!cargandoHistorico">
+ <canvas
+  baseChart
+  #gddChart="base-chart"
+  [data]="gddChartData"
+  [options]="gddChartOptions"
+  [type]="'line'">
+</canvas>
+</div>
+</div>
+
+      <div class="panel">
+        <h3>Riesgo meteorológico</h3>
+
+        <p><b>Reflectividad:</b> {{ diaActual?.refmax | number:'1.2-2' }}</p>
+        <p><b>Granizo:</b> {{ diaActual?.hail | number:'1.2-2' }}</p>
+        <p><b>Graupel:</b> {{ diaActual?.graupel | number:'1.2-2' }}</p>
+      </div>
+
+
+
+
+    </section>
+
+  </main>
+
+</div>

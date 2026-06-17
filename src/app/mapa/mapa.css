@@ -1,0 +1,145 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar {
+
+  height: 64px;
+
+  background: #1f2937;
+
+  color: white;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 0 20px;
+
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+
+  z-index: 1000;
+
+}
+
+.navbar-left {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+}
+
+.logo {
+
+  width: 40px;
+
+  height: 40px;
+
+}
+
+.title {
+
+  font-size: 18px;
+
+  font-weight: bold;
+
+}
+
+.logout-btn {
+
+  background: #dc2626;
+
+  color: white;
+
+  border: none;
+
+  padding: 10px 16px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+}
+
+.logout-btn:hover {
+
+  background: #b91c1c;
+
+}
+
+#map {
+
+  flex: 1;
+
+  width: 100%;
+
+}
+.map-container {
+  height: calc(100vh - 64px);
+  width: 100%;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+.intro {
+  max-width: 1100px;
+  margin: 24px auto 16px auto;
+  padding: 0 20px;
+}
+
+.intro h1 {
+  margin: 0 0 8px 0;
+  color: #1f3324;
+}
+
+.intro p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.map-card {
+  max-width: 1100px;
+  height: 650px;
+  margin: 0 auto 30px auto;
+  padding: 12px;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 8px 25px rgba(0,0,0,.15);
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .map-card {
+    height: 520px;
+    margin: 0 12px 24px 12px;
+  }
+
+  .intro {
+    margin-top: 18px;
+  }
+}
