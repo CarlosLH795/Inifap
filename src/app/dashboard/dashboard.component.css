@@ -357,3 +357,24 @@ select {
   font-size: 13px;
   font-weight: 500;
 }
+
+.chart-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin: 10px 0 12px;
+}
+
+.chart-actions button {
+  border: none;
+  background: #eaf4df;
+  color: #1b3b23;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chart-actions button:hover {
+  background: #d8ebcc;
+}

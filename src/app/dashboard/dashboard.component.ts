@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { forkJoin, timeout, catchError, of, finalize } from 'rxjs';
-
+import jsPDF from 'jspdf';
 import { Navbar } from '../navbar/navbar';
 import { AgroApiService } from '../services/agro-api.services';
 
@@ -104,6 +104,104 @@ export class DashboardComponent implements OnInit {
       }
     }
   };
+
+  descargarGraficaPNG(tipo: 'humedad' | 'gdd'): void {
+  const chart =
+    tipo === 'humedad'
+      ? this.humedadChart?.chart
+      : this.gddChart?.chart;
+
+  if (!chart) return;
+
+  const link = document.createElement('a');
+  link.href = chart.toBase64Image();
+  link.download = tipo === 'humedad'
+    ? 'humedad_suelo.png'
+    : 'historico_gdd.png';
+
+  link.click();
+}
+
+descargarCSV(tipo: 'humedad' | 'gdd'): void {
+  let csv = '';
+  let nombre = '';
+
+  if (tipo === 'humedad') {
+    csv = 'fecha,valor\n';
+
+    this.humedad?.pronostico?.forEach((x: any) => {
+      csv += `${x.fecha},${x.valor}\n`;
+    });
+
+    nombre = 'humedad_suelo.csv';
+  }
+
+  if (tipo === 'gdd') {
+    csv = 'fecha,gdd\n';
+
+    this.historico?.serie?.forEach((x: any) => {
+      csv += `${x.fecha},${x.gdd}\n`;
+    });
+
+    nombre = 'historico_gdd.csv';
+  }
+
+  const blob = new Blob([csv], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = nombre;
+  link.click();
+
+  window.URL.revokeObjectURL(url);
+}
+
+descargarPDF(tipo: 'humedad' | 'gdd'): void {
+  const chart =
+    tipo === 'humedad'
+      ? this.humedadChart?.chart
+      : this.gddChart?.chart;
+
+  if (!chart) return;
+
+  const img = chart.toBase64Image();
+  const pdf = new jsPDF('landscape', 'mm', 'a4');
+
+  const titulo = tipo === 'humedad'
+    ? 'Reporte de Humedad de Suelo'
+    : 'Reporte Histórico GDD';
+
+  pdf.setFontSize(16);
+  pdf.text(titulo, 15, 15);
+
+  pdf.setFontSize(10);
+  pdf.text(`Lat: ${this.lat}`, 15, 23);
+  pdf.text(`Lon: ${this.lon}`, 15, 29);
+  pdf.text(`Fecha pronóstico: ${this.fechaPronostico || '-'}`, 15, 35);
+
+  if (tipo === 'humedad') {
+    pdf.text(`Profundidad: ${this.profundidad}`, 15, 41);
+    pdf.text(`Variable: ${this.variableHumedad}`, 15, 47);
+    pdf.text(`Estado: ${this.humedad?.estado?.nombre || '-'}`, 15, 53);
+  }
+
+  if (tipo === 'gdd') {
+    pdf.text(`Fecha inicio: ${this.fechaInicio}`, 15, 41);
+    pdf.text(`Fecha fin: ${this.fechaFin}`, 15, 47);
+  }
+
+  pdf.addImage(img, 'PNG', 15, 60, 260, 120);
+
+  pdf.save(
+    tipo === 'humedad'
+      ? 'reporte_humedad_suelo.pdf'
+      : 'reporte_historico_gdd.pdf'
+  );
+}
 
   constructor(
     private router: Router,

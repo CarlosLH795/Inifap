@@ -122,6 +122,11 @@
 </div>
 
   <div class="chart-box"  *ngIf="humedad">
+    <div class="chart-actions">
+  <button (click)="descargarGraficaPNG('humedad')">PNG</button>
+  <button (click)="descargarCSV('humedad')">CSV</button>
+  <button (click)="descargarPDF('humedad')">PDF</button>
+</div>
     <canvas
   baseChart
   #humedadChart="base-chart"
@@ -166,6 +171,11 @@
 </div>
 
 <div class="chart-box" *ngIf="!cargandoHistorico">
+  <div class="chart-actions">
+  <button (click)="descargarGraficaPNG('gdd')">PNG</button>
+  <button (click)="descargarCSV('gdd')">CSV</button>
+  <button (click)="descargarPDF('gdd')">PDF</button>
+</div>
  <canvas
   baseChart
   #gddChart="base-chart"
