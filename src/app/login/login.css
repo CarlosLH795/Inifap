@@ -1,3 +1,5 @@
+
+
 .login-page {
   height: 100vh;
   background: linear-gradient(135deg, #1f4d2b, #0f2415);
@@ -25,30 +27,144 @@
   color: #6b7280;
 }
 
+.subtitle {
+  color: #6f7d6f;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
 input {
   width: 100%;
-  padding: 12px;
-  margin-bottom: 14px;
+  padding: 12px 14px;
+  box-sizing: border-box;
 
-  border: 1px solid #d1d5db;
+  border: 1px solid #cfd8cf;
   border-radius: 10px;
+
+  font-size: 15px;
+
+  text-align: left;
 }
 
 button {
   width: 100%;
   padding: 12px;
-
+  margin-top: 16px;
   background: #2e7d32;
   color: white;
-
   border: none;
   border-radius: 10px;
-
   cursor: pointer;
-  font-weight: bold;
 }
 
 .error {
   margin-top: 14px;
   color: #dc2626;
+}
+
+
+.login-error {
+  margin-top: 14px;
+  background: #fdecea;
+  border: 1px solid #f5b5b0;
+  color: #8a1f17;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.login-error strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.login-error p {
+  margin: 0;
+}
+
+.help-box {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #566656;
+}
+
+.help-btn {
+  margin-top: 8px;
+  width: 100%;
+  border: none;
+  background: #eaf4df;
+  color: #1f5f2a;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.help-btn:hover {
+  background: #d8ebcc;
+}
+
+
+.login-error {
+  margin-top: 14px;
+  background: #fdecea;
+  border: 1px solid #f5b5b0;
+  color: #8a1f17;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.login-error strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.login-error p {
+  margin: 0;
+}
+
+.help-box {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #566656;
+}
+
+.help-btn {
+  margin-top: 8px;
+  width: 100%;
+  border: none;
+  background: #eaf4df;
+  color: #1f5f2a;
+  font-weight: 700;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.help-btn:hover {
+  background: #d8ebcc;
+}
+
+
+.login-error {
+  margin-top: 14px;
+  background: #fdecea;
+  border: 1px solid #f5b5b0;
+  color: #8a1f17;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.input-label {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #26442c;
 }

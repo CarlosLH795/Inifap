@@ -89,12 +89,12 @@
   <h3>Humedad de suelo</h3>
 
   <select [(ngModel)]="profundidad" (change)="cargarHumedad()">
-    <option value="0_5">0-5</option>
-    <option value="5_15">5-15</option>
-    <option value="15_30">15-30</option>
-    <option value="30_60">30-60</option>
-    <option value="60_100">60-100</option>
-    <option value="100_200">100-200</option>
+    <option value="0_5">Humedad de 0-5 cm</option>
+    <option value="5_15">Humedad de 5-15 cm</option>
+    <option value="15_30">Humedad de 15-30 cm</option>
+    <option value="30_60">Humedad de 30-60 cm</option>
+    <option value="60_100">Humedad de 60-100 cm</option>
+    <option value="100_200">Humedad de 100-200 cm</option>
   </select>
 
   <select [(ngModel)]="variableHumedad" (change)="cargarHumedad()">
@@ -107,6 +107,19 @@
     PMP: {{ humedad.referencia.pmp }} |
     CC: {{ humedad.referencia.cc }}
   </p>
+  <div
+  class="riego-alerta"
+  [class.regar]="recomendacionRiego === 'Regar'"
+  [class.no-regar]="recomendacionRiego === 'No regar'">
+
+  <strong>{{ recomendacionRiego }}</strong>
+
+  <span>
+    Umbral medio:
+    {{ umbralRiego | number:'1.2-2' }}
+  </span>
+
+</div>
 
   <div class="chart-box"  *ngIf="humedad">
     <canvas

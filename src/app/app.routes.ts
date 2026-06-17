@@ -2,7 +2,8 @@ import { Routes } from '@angular/router';
 import { Login } from './login/login';
 import { Mapa } from './mapa/mapa';
 import { DashboardComponent } from './dashboard/dashboard.component';
-
+import { adminGuard } from './admin-guards';
+import { UsuariosAdmin } from './usuarios-admin/usuarios-admin';
 import { authGuard } from './auth-guard';
 
 export const routes: Routes = [
@@ -13,6 +14,12 @@ export const routes: Routes = [
     component: Mapa,
     canActivate: [authGuard]
   },
+
+  {
+  path: 'admin/usuarios',
+  component: UsuariosAdmin,
+  canActivate: [adminGuard]
+},
 
   {
     path: 'dashboard',

@@ -38,7 +38,8 @@ export class DashboardComponent implements OnInit {
   diaActual: any;
   historico: any;
   humedad: any;
-
+  recomendacionRiego = '';
+  umbralRiego = 0;
   cargando = true;
   errorCarga = '';
 
@@ -282,10 +283,18 @@ export class DashboardComponent implements OnInit {
 
     const pmp = resp.referencia.pmp;
     const cc = resp.referencia.cc;
+    this.umbralRiego = (pmp + cc) / 2;
 
-    const valoresValidos = humedadValores.filter(
-      (x: any) => x !== null && x !== undefined
-    );
+    const valorActual = humedadValores[0];
+
+    if (valorActual < this.umbralRiego) {
+      this.recomendacionRiego = 'Regar';
+    } else {
+      this.recomendacionRiego = 'No regar';
+    }
+        const valoresValidos = humedadValores.filter(
+          (x: any) => x !== null && x !== undefined
+        );
 
     const minValor = Math.min(pmp, ...valoresValidos);
     const maxValor = Math.max(cc, ...valoresValidos);

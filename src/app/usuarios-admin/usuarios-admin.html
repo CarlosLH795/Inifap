@@ -1,0 +1,130 @@
+<app-navbar></app-navbar>
+
+<div class="usuarios-page">
+
+  <h1>Administración de usuarios</h1>
+  <p>Alta, edición, activación y cambio de contraseña.</p>
+
+  @if (mensaje) {
+    <div class="alert ok">{{ mensaje }}</div>
+  }
+
+  @if (error) {
+    <div class="alert error">{{ error }}</div>
+  }
+
+  <div class="admin-grid">
+
+    <section class="form-card">
+
+      <h2>
+        {{ editandoId === null ? 'Nuevo usuario' : 'Editar usuario' }}
+      </h2>
+
+      <label>Usuario</label>
+      <input
+        type="text"
+        [(ngModel)]="form.usuario"
+        [disabled]="editandoId !== null">
+
+      <label>Nombre</label>
+      <input
+        type="text"
+        [(ngModel)]="form.nombre">
+
+      <label>Rol</label>
+      <select [(ngModel)]="form.rol">
+        <option value="usuario">Usuario</option>
+        <option value="admin">Administrador</option>
+      </select>
+
+      @if (editandoId !== null) {
+        <label>Estado</label>
+        <select [(ngModel)]="form.activo">
+          <option [ngValue]="true">Activo</option>
+          <option [ngValue]="false">Inactivo</option>
+        </select>
+      }
+
+      <label>
+        Contraseña
+        @if (editandoId !== null) {
+          <span class="hint">(dejar vacío si no cambia)</span>
+        }
+      </label>
+
+      <input
+        type="password"
+        [(ngModel)]="form.password">
+
+      <div class="actions">
+        <button class="primary" (click)="guardar()">
+          {{ editandoId === null ? 'Crear usuario' : 'Guardar cambios' }}
+        </button>
+
+        <button class="secondary" (click)="limpiarFormulario()">
+          Limpiar
+        </button>
+      </div>
+
+    </section>
+
+    <section class="table-card">
+
+      <h2>Usuarios registrados</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Creado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (u of usuarios; track u.id) {
+            <tr>
+              <td>{{ u.id }}</td>
+              <td>{{ u.usuario }}</td>
+              <td>{{ u.nombre }}</td>
+              <td>
+                <span class="badge" [class.admin]="u.rol === 'admin'">
+                  {{ u.rol }}
+                </span>
+              </td>
+              <td>
+                <span class="status" [class.inactivo]="!u.activo">
+                  {{ u.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>{{ u.created_at | date:'short' }}</td>
+              <td>
+                <button class="small" (click)="editar(u)">
+                  Editar
+                </button>
+
+                @if (u.activo) {
+                  <button class="small danger" (click)="desactivar(u)">
+                    Baja
+                  </button>
+                } @else {
+                  <button class="small success" (click)="activar(u)">
+                    Activar
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+    </section>
+
+  </div>
+
+</div>

@@ -1,0 +1,169 @@
+.usuarios-page {
+  padding: 28px;
+  background: #f3f6ef;
+  min-height: calc(100vh - 60px);
+  font-family: Arial, sans-serif;
+}
+
+.usuarios-page h1 {
+  margin: 0;
+  color: #1f3324;
+}
+
+.usuarios-page p {
+  color: #6f7d6f;
+  margin-bottom: 22px;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 20px;
+}
+
+.form-card,
+.table-card {
+  background: white;
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.form-card h2,
+.table-card h2 {
+  margin-top: 0;
+  color: #1f3324;
+}
+
+label {
+  display: block;
+  margin-top: 14px;
+  font-weight: 700;
+  color: #263b2b;
+}
+
+input,
+select {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #ccd6cc;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+input:disabled {
+  background: #edf1ed;
+}
+
+.hint {
+  font-size: 12px;
+  color: #777;
+  font-weight: 400;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.primary {
+  background: #2e7d32;
+  color: white;
+  padding: 11px 16px;
+}
+
+.secondary {
+  background: #eaf4df;
+  color: #1b3b23;
+  padding: 11px 16px;
+}
+
+.small {
+  background: #eaf4df;
+  color: #1b3b23;
+  padding: 7px 10px;
+  margin-right: 6px;
+}
+
+.small.danger {
+  background: #fdecea;
+  color: #8a1f17;
+}
+
+.small.success {
+  background: #dff3e3;
+  color: #1b5e20;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 12px;
+  border-bottom: 1px solid #edf0ed;
+}
+
+th {
+  color: #1f3324;
+}
+
+.badge,
+.status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #eaf4df;
+  color: #1b5e20;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge.admin {
+  background: #e3f2fd;
+  color: #0d47a1;
+}
+
+.status.inactivo {
+  background: #fdecea;
+  color: #8a1f17;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.alert.ok {
+  background: #dff3e3;
+  color: #1b5e20;
+}
+
+.alert.error {
+  background: #fdecea;
+  color: #8a1f17;
+}
+
+@media (max-width: 1000px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-card {
+    overflow-x: auto;
+  }
+}

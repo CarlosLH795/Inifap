@@ -6,8 +6,12 @@
   </div>
 
   <div class="right">
-    <!--<button (click)="irMapa()">Mapa</button>
-    <button (click)="irDashboard()">Dashboard</button> -->
+    <button (click)="irMapa()">Mapa</button>
+    @if (authService.esAdmin()) {
+  <button (click)="irUsuarios()">
+    Usuarios
+  </button>
+}
     <button class="logout" (click)="logout()">Logout</button>
   </div>
 

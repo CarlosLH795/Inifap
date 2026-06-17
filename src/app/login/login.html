@@ -2,26 +2,55 @@
 
   <div class="login-card">
 
-    <h1>WRF Agro</h1>
-    <p>Iniciar sesión</p>
+   <h1>WRF Agro</h1>
+<p class="subtitle">
+  Plataforma Agroclimática de Monitoreo y Pronóstico
+</p>
 
-    <input
-      type="text"
-      placeholder="Usuario"
-      [(ngModel)]="usuario">
+    <label class="input-label">Usuario</label>
+<input
+  type="text"
+  placeholder="Ingrese su usuario"
+  [(ngModel)]="usuario">
 
-    <input
-      type="password"
-      placeholder="Contraseña"
-      [(ngModel)]="password">
+<label class="input-label">Contraseña</label>
+<input
+  type="password"
+  placeholder="Ingrese su contraseña"
+  [(ngModel)]="password"
+  (keyup.enter)="entrar()">
+<br>
+    <button
+      type="button"
+      (click)="entrar()">
+      Entrar
+    </button>
 
-    <button (click)="entrar()">Entrar</button>
+   
 
-    @if(error){
-      <div class="error">
-        Usuario o contraseña incorrectos
-      </div>
-    }
+    @if (error !== '') {
+  <div class="login-error">
+    <strong>No se pudo iniciar sesión</strong>
+    <p>{{ error }}</p>
+  </div>
+}
+
+    <div class="help-box">
+      <span>¿Tienes problemas para ingresar?</span>
+
+      <button
+        type="button"
+        class="help-btn"
+        (click)="abrirCorreoSoporte()">
+        Solicitar ayuda
+      </button>
+    </div>
+
+    <div class="help-box">
+      <span>¿Quieres solicitar acceso?</span>
+      <br><span>Envia un mail a la dirección up130467@gmail.com, con el asunto: Acceso HMS, y todos tus datos</span>
+      
+    </div>
 
   </div>
 
