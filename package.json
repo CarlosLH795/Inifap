@@ -19,6 +19,7 @@
     "@angular/router": "^22.0.0",
     "build": "^0.1.4",
     "chart.js": "^4.5.1",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "echarts": "^6.1.0",
     "jspdf": "^4.2.1",
     "leaflet": "^1.9.4",

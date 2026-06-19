@@ -11,17 +11,23 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(usuario: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/login`, {
-      usuario,
-      password
-    }).pipe(
-      tap((resp: any) => {
-        localStorage.setItem('token', resp.access_token);
-        localStorage.setItem('usuario', JSON.stringify(resp.usuario));
-      })
-    );
-  }
+  login(
+  usuario: string,
+  password: string,
+  captchaToken: string
+): Observable<any> {
+
+  return this.http.post(`${this.apiUrl}/api/auth/login`, {
+    usuario,
+    password,
+    captcha_token: captchaToken
+  }).pipe(
+    tap((resp: any) => {
+      localStorage.setItem('token', resp.access_token);
+      localStorage.setItem('usuario', JSON.stringify(resp.usuario));
+    })
+  );
+}
 
   getToken(): string | null {
     return localStorage.getItem('token');
@@ -42,18 +48,26 @@ export class AuthService {
   }
 
   getRol(): string | null {
-    const usuario = this.getUsuario();
-    return usuario?.rol || null;
-  }
+  const usuario = this.getUsuario();
+  return usuario?.rol || null;
+}
 
-  esAdmin(): boolean {
-    return this.getRol() === 'admin';
-  }
+esAdmin(): boolean {
+  return this.getRol() === 'admin';
+}
 
-  esUsuario(): boolean {
-    return this.getRol() === 'usuario';
-  }
+esInvestigador(): boolean {
+  return this.getRol() === 'investigador';
+}
 
+esUsuario(): boolean {
+  return this.getRol() === 'usuario';
+}
+
+puedeDescargar(): boolean {
+  const rol = this.getRol();
+  return rol === 'admin' || rol === 'investigador';
+}
   estaLogueado(): boolean {
     const token = this.getToken();
 

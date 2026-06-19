@@ -137,6 +137,7 @@
   padding: 20px;
   border-radius: 18px;
   box-shadow: 0 8px 20px rgba(0,0,0,.06);
+  
 }
 
 .card span {
@@ -168,6 +169,7 @@
 
 .panel.large {
   min-height: 260px;
+  margin-bottom: 30px;
 }
 
 .chart-placeholder {
