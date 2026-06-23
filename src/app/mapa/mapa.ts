@@ -30,6 +30,8 @@ export class Mapa implements AfterViewInit {
 
   ngAfterViewInit(): void {
     this.map = L.map('map').setView(  [22.5, -102.0],  6);
+    (window as any).leafletMap = this.map;
+    (window as any).L = L;
       setTimeout(() => {
       this.map.invalidateSize();
       }, 200);

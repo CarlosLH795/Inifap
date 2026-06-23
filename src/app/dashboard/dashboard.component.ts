@@ -37,7 +37,9 @@ export class DashboardComponent implements OnInit {
   lon!: number;
 
   fechaPronostico = '';
-
+  fechaHoy = this.formatearFechaInput(new Date());
+  fechaMinimaGdd = this.calcularFechaMinimaGdd();
+  fechaMaximaGdd = this.calcularFechaMaximaGdd();
   wrf: any;
   diaActual: any;
   historico: any;
@@ -111,6 +113,62 @@ export class DashboardComponent implements OnInit {
       }
     }
   };
+
+  formatearFechaInput(fecha: Date): string {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, '0');
+  const day = String(fecha.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+calcularFechaMinimaGdd(): string {
+  const fecha = new Date();
+
+  fecha.setFullYear(fecha.getFullYear() - 5);
+
+  return this.formatearFechaInput(fecha);
+}
+
+calcularFechaMaximaGdd(): string {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + 4);
+
+  return this.formatearFechaInput(fecha);
+}
+
+validarRangoGdd(): boolean {
+
+  if (this.fechaInicio < this.fechaMinimaGdd) {
+
+    this.fechaInicio = this.fechaMinimaGdd;
+
+    this.errorHistorico =
+      `La fecha inicio no puede ser menor a ${this.fechaMinimaGdd}`;
+
+    return false;
+  }
+
+  if (this.fechaFin > this.fechaMaximaGdd) {
+
+    this.fechaFin = this.fechaMaximaGdd;
+
+    this.errorHistorico =
+      `La fecha fin no puede ser mayor a ${this.fechaMaximaGdd}`;
+
+    return false;
+  }
+
+  if (this.fechaInicio > this.fechaFin) {
+
+    this.errorHistorico =
+      'La fecha inicio no puede ser mayor que la fecha fin';
+
+    return false;
+  }
+
+  return true;
+}
 
   constructor(
     private router: Router,
@@ -213,8 +271,14 @@ export class DashboardComponent implements OnInit {
   }
 
   cargarHistorico(): void {
-    this.cargandoHistorico = true;
-    this.errorHistorico = '';
+     if (!this.validarRangoGdd()) {
+    return;
+  }
+
+  this.cargandoHistorico = true;
+  this.errorHistorico = '';
+
+  
 
     this.agroApi
       .getGddSerie(this.lat, this.lon, this.fechaInicio, this.fechaFin)

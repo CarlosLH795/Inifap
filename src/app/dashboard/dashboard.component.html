@@ -157,16 +157,16 @@
       
       <div class="panel large">
         <h3>Histórico GDD</h3>
-
+        
         <div class="date-controls">
-          <input type="date" [(ngModel)]="fechaInicio">
-          <input type="date" [(ngModel)]="fechaFin">
+          <input type="date" [(ngModel)]="fechaInicio" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
+          <input type="date" [(ngModel)]="fechaFin" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
 
           <button (click)="cargarHistorico()">
             Consultar histórico
           </button>
         </div>
-
+<span style="text-align:center;  font-size: 13px;  color: #566656;">*solo se muestra consultas en un rango de 5 años</span>
         <div *ngIf="cargandoHistorico" class="gdd-loading">
   <div class="mini-loader"></div>
   <p>Cargando histórico GDD...</p>
