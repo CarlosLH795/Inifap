@@ -82,7 +82,7 @@
       </div>
 
     </section>
-
+<!--
     <section class="grid">
 
      <div class="panel large">
@@ -146,7 +146,7 @@
         <p><b>V:</b> {{ diaActual?.v | number:'1.2-2' }}</p>
         <p><b>Racha:</b> {{ diaActual?.gust | number:'1.2-2' }}</p>
 
-        
+        <br>
         <h3>Suelo</h3>
 
         <p><b>Soil 0-10:</b> {{ diaActual?.soilw010 | number:'1.2-2' }}</p>
@@ -161,17 +161,23 @@
         <div class="date-controls">
           <input type="date" [(ngModel)]="fechaInicio" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
           <input type="date" [(ngModel)]="fechaFin" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
-
-          <button (click)="cargarHistorico()">
-            Consultar histórico
-          </button>
+          <select [(ngModel)]="cultivoGdd" (change)="cargarHistorico()">
+            <option value="maiz">Maíz</option>
+            <option value="frijol">Frijol</option>
+            <option value="sorgo">Sorgo</option>
+          </select>
+         <button (click)="cargarHistorico()" [disabled]="cargandoHistorico">
+  {{ cargandoHistorico ? 'Consultando...' : 'Consultar histórico' }}
+</button>
         </div>
-<span style="text-align:center;  font-size: 13px;  color: #566656;">*solo se muestra consultas en un rango de 5 años</span>
+<span style="text-align:center;  font-size: 13px;  color: #566656;">*solo se muestra consultas en un rango de 5 años, el rango de fechas influye directamente en cuanto puede tardar el sistema en mostrar la información</span>
         <div *ngIf="cargandoHistorico" class="gdd-loading">
   <div class="mini-loader"></div>
   <p>Cargando histórico GDD...</p>
 </div>
-
+<p *ngIf="errorHistorico" class="error-text">
+  {{ errorHistorico }}
+</p>
 <div class="chart-box" *ngIf="!cargandoHistorico">
   @if (authService.puedeDescargar()) {
   <div class="chart-actions">
@@ -202,7 +208,7 @@
 
 
     </section>
-
+  -->
   </main>
 
 </div>

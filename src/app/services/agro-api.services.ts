@@ -20,19 +20,22 @@ export class AgroApiService {
   }
 
   getGddSerie(
-    lat: number,
-    lon: number,
-    fechaInicio: string,
-    fechaFin: string
-  ): Observable<any> {
-    const params = new HttpParams()
-      .set('lat', lat)
-      .set('lon', lon)
-      .set('fecha_inicio', fechaInicio)
-      .set('fecha_fin', fechaFin);
-
-    return this.http.get(`${this.apiUrl}/api/clima/gdd-serie`, { params });
-  }
+  lat: number,
+  lon: number,
+  fechaInicio: string,
+  fechaFin: string,
+  cultivo: 'maiz' | 'frijol' | 'sorgo'
+) {
+  return this.http.get(`${this.apiUrl}/api/clima/gdd-serie`, {
+    params: {
+      lat,
+      lon,
+      fecha_inicio: fechaInicio,
+      fecha_fin: fechaFin,
+      cultivo
+    }
+  });
+}
 
   getHumedadBarra(
     lat: number,

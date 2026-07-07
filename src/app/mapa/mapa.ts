@@ -118,6 +118,7 @@ const popupHtml = `
               );
 
               this.router.navigate([
+               //cambiar a Dashboard
                 '/dashboard'
               ]);
             };

@@ -91,10 +91,10 @@ ngAfterViewInit(): void {
   this.error = '';
 
   //descomentar para activar el captcha
-  //if (!this.captchaToken) {
-    //this.error = 'Por favor completa el captcha.';
-    //return;
-  //}
+  if (!this.captchaToken) {
+    this.error = 'Por favor completa el captcha.';
+    return;
+  }
 
   this.authService.login(this.usuario, this.password, this.captchaToken)
     .subscribe({

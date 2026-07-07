@@ -44,7 +44,7 @@ export class DashboardComponent implements OnInit {
   diaActual: any;
   historico: any;
   humedad: any;
-
+  cultivoGdd: 'maiz' | 'frijol' | 'sorgo' = 'frijol';
   recomendacionRiego = '';
   umbralRiego = 0;
 
@@ -270,59 +270,62 @@ validarRangoGdd(): boolean {
     });
   }
 
-  cargarHistorico(): void {
-     if (!this.validarRangoGdd()) {
+cargarHistorico(): void {
+  if (!this.validarRangoGdd()) {
     return;
   }
 
   this.cargandoHistorico = true;
   this.errorHistorico = '';
+  this.historico = null;
 
-  
+  this.agroApi
+    .getGddSerie(
+      this.lat,
+      this.lon,
+      this.fechaInicio,
+      this.fechaFin,
+      this.cultivoGdd
+    )
+    .pipe(
+      timeout(120000),
+      catchError(err => {
+        console.error('Error histórico GDD:', err);
+        this.errorHistorico = 'No se pudo cargar el histórico GDD.';
+        return of(null);
+      })
+    )
+    .subscribe((resp: any) => {
+      this.cargandoHistorico = false;
 
-    this.agroApi
-      .getGddSerie(this.lat, this.lon, this.fechaInicio, this.fechaFin)
-      .pipe(
-        timeout(60000),
-        catchError(err => {
-          console.error('Error histórico GDD:', err);
-          this.errorHistorico = 'No se pudo cargar el histórico GDD.';
-          return of(null);
-        }),
-        finalize(() => {
-          this.cargandoHistorico = false;
+      if (!resp || !Array.isArray(resp.serie) || resp.serie.length === 0) {
+        this.errorHistorico = 'No hay datos GDD para la consulta.';
+        return;
+      }
 
-          setTimeout(() => {
-            this.cdr.detectChanges();
-            this.gddChart?.update();
-          }, 0);
-        })
-      )
-      .subscribe((resp: any) => {
-        console.log('RESP HISTORICO:', resp);
+      this.historico = resp;
 
-        if (!resp || !resp.serie) {
-          return;
-        }
+      const serieGrafica = this.agruparSerieGdd(resp.serie);
 
-        const serieGrafica = this.agruparSerieGdd(resp.serie);
+      this.gddChartData = {
+        labels: serieGrafica.labels,
+        datasets: [
+          {
+            label: `GDD ${this.cultivoGdd.toUpperCase()}`,
+            data: serieGrafica.data,
+            tension: 0.2,
+            pointRadius: serieGrafica.data.length <= 90 ? 3 : 0,
+            borderWidth: 2
+          }
+        ]
+      };
 
-        this.historico = resp;
-
-        this.gddChartData = {
-          labels: serieGrafica.labels,
-          datasets: [
-            {
-              label: 'GDD',
-              data: serieGrafica.data,
-              tension: 0.2,
-              pointRadius: serieGrafica.data.length <= 90 ? 3 : 0,
-              borderWidth: 2
-            }
-          ]
-        };
-      });
-  }
+      setTimeout(() => {
+        this.cdr.detectChanges();
+        this.gddChart?.update();
+      }, 0);
+    });
+}
 
   cargarHumedad(): void {
     this.agroApi
