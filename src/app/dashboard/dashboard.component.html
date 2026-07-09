@@ -31,12 +31,13 @@
     </button>
 
     <div class="weather-main">
-      <p>Temperatura</p>
+      <p>Temperatura promedio</p>
       <h1>{{ diaActual?.temp | number:'1.2-2' }}°C</h1>
-      <span>Punto seleccionado</span>
+      
     </div>
 
     <div class="location">
+      <span>Punto seleccionado</span>
       <p><b>Lat:</b> {{ lat | number:'1.4-4' }}</p>
       <p><b>Lon:</b> {{ lon | number:'1.4-4' }}</p>
     </div>
@@ -55,34 +56,21 @@
       </div>
     </div>
 
-    <section class="cards" *ngIf="diaActual">
+    <section class="forecast-strip" *ngIf="pronosticoResumen.length">
 
-      <div class="card">
-        <span>🌡️</span>
-        <p>Máxima</p>
-        <h2>{{ diaActual?.tmax | number:'1.2-2' }}°C</h2>
-      </div>
+  <div class="forecast-day" *ngFor="let d of pronosticoResumen">
+    <h4>{{ d.fecha }}</h4>
 
-      <div class="card">
-        <span>❄️</span>
-        <p>Mínima</p>
-        <h2>{{ diaActual?.tmin | number:'1.2-2' }}°C</h2>
-      </div>
+    <div class="forecast-values">
+      <span>🌡️ Máx: {{ d.tmax | number:'1.1-1' }}°C</span>
+      <span>❄️ Mín: {{ d.tmin | number:'1.1-1' }}°C</span>
+      <span>🌧️ Lluvia: {{ d.rain | number:'1.1-1' }} mm</span>
+      <span>💧 HR: {{ d.rh | number:'1.0-0' }}%</span>
+    </div>
+  </div>
 
-      <div class="card">
-        <span>🌧️</span>
-        <p>Lluvia</p>
-        <h2>{{ diaActual?.rain | number:'1.2-2' }} mm</h2>
-      </div>
+</section>
 
-      <div class="card">
-        <span>💧</span>
-        <p>Humedad</p>
-        <h2>{{ diaActual?.rh | number:'1.2-2' }}%</h2>
-      </div>
-
-    </section>
-<!--
     <section class="grid">
 
      <div class="panel large">
@@ -112,7 +100,7 @@
   [class.regar]="recomendacionRiego === 'Regar'"
   [class.no-regar]="recomendacionRiego === 'No regar'">
 
-  <strong>{{ recomendacionRiego }}</strong>
+  <!--<strong>{{ recomendacionRiego }}</strong>-->
 
   <span>
     Umbral medio:
@@ -140,20 +128,49 @@
 </div>
 
       <div class="panel">
-        <h3>Variables de viento</h3>
 
-        <p><b>U:</b> {{ diaActual?.u | number:'1.2-2' }}</p>
-        <p><b>V:</b> {{ diaActual?.v | number:'1.2-2' }}</p>
-        <p><b>Racha:</b> {{ diaActual?.gust | number:'1.2-2' }}</p>
+  <h3>🌬️ Condiciones del viento para la fecha actual</h3>
 
-        <br>
-        <h3>Suelo</h3>
+  <p>
+    <b>Velocidad:</b>
+    {{ obtenerVelocidadViento(diaActual?.u, diaActual?.v) | number:'1.2-2' }}
+    m/s
+  </p>
 
-        <p><b>Soil 0-10:</b> {{ diaActual?.soilw010 | number:'1.2-2' }}</p>
-        <p><b>Soil 10-40:</b> {{ diaActual?.soilw1040 | number:'1.2-2' }}</p>
-        <p><b>T suelo 0-10:</b> {{ diaActual?.tsoil010 | number:'1.2-2' }}</p>
-      </div>
+  <p>
+    <b>Dirección:</b>
+    {{ obtenerDireccionViento(diaActual?.u, diaActual?.v) }}
+  </p>
+
+  <p>
+    <b>Racha máxima:</b>
+    {{ diaActual?.gust | number:'1.2-2' }} m/s
+  </p>
+
+  <hr>
+
+  <h3>🌱 Condiciones del suelo para la fecha actual</h3>
+
+  <p>
+    <b>Humedad superficial (0–10 cm):</b>
+    {{ diaActual?.soilw010 | number:'1.2-2' }}
+  </p>
+
+  <p>
+    <b>Humedad radicular (10–40 cm):</b>
+    {{ diaActual?.soilw1040 | number:'1.2-2' }}
+  </p>
+
+  <p>
+    <b>Temperatura del suelo (0–10 cm):</b>
+    {{ diaActual?.tsoil010 | number:'1.2-2' }} °C
+  </p>
+
+</div>
+
       
+       </section>
+     <!-- 
       
       <div class="panel large">
         <h3>Histórico GDD</h3>
@@ -207,7 +224,7 @@
 
 
 
-    </section>
+   
   -->
   </main>
 

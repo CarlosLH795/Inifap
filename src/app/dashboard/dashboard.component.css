@@ -380,3 +380,54 @@ select {
 .chart-actions button:hover {
   background: #d8ebcc;
 }
+
+.forecast-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.forecast-day {
+  background: white;
+  border-radius: 18px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.06);
+}
+
+.forecast-day h4 {
+  margin: 0 0 10px;
+  color: #1f3324;
+  font-size: 14px;
+}
+
+.forecast-values {
+  display: grid;
+  gap: 5px;
+  font-size: 13px;
+  color: #1f3324;
+}
+
+@media (max-width: 1200px) {
+  .forecast-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+
+.panel hr{
+    margin:22px 0;
+    border:none;
+    border-top:1px solid #e5e5e5;
+}
+
+.panel p{
+    margin:12px 0;
+    line-height:1.5;
+}
+
+.panel h3{
+    margin-top:0;
+    margin-bottom:18px;
+    color:#234028;
+}

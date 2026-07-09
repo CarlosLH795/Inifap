@@ -47,7 +47,7 @@ export class DashboardComponent implements OnInit {
   cultivoGdd: 'maiz' | 'frijol' | 'sorgo' = 'frijol';
   recomendacionRiego = '';
   umbralRiego = 0;
-
+  pronosticoResumen: any[] = [];
   cargando = true;
   errorCarga = '';
 
@@ -92,7 +92,7 @@ export class DashboardComponent implements OnInit {
     }
   };
 
-  humedadChartData: ChartData<'bar'> = {
+  humedadChartData: ChartData<'bar' | 'line'> = {
     labels: [],
     datasets: [
       {
@@ -102,7 +102,7 @@ export class DashboardComponent implements OnInit {
     ]
   };
 
-  humedadChartOptions: ChartConfiguration<'bar'>['options'] = {
+  humedadChartOptions: ChartConfiguration<'bar' | 'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
@@ -227,7 +227,13 @@ validarRangoGdd(): boolean {
         if (resp.wrf) {
           this.wrf = resp.wrf;
           this.diaActual = resp.wrf?.serie?.[0]?.variables;
-
+          this.pronosticoResumen = resp.wrf?.serie?.slice(0, 5).map((d: any) => ({
+              fecha: d.fecha,
+              tmax: d.variables?.tmax,
+              tmin: d.variables?.tmin,
+              rain: d.variables?.rain,
+              rh: d.variables?.rh
+            })) || [];
           const fecha = resp.wrf?.serie?.[0]?.fecha;
           if (fecha) {
             this.fechaPronostico = fecha;
@@ -376,8 +382,8 @@ cargarHistorico(): void {
       (x: any) => x !== null && x !== undefined
     );
 
-    const minValor = Math.min(pmp, ...valoresValidos);
-    const maxValor = Math.max(cc, ...valoresValidos);
+    const minValor = Math.min(pmp, cc, ...valoresValidos);
+    const maxValor = Math.max(pmp, cc, ...valoresValidos);
     const margen = Math.abs(maxValor - minValor) * 0.08 || 0.1;
 
     this.humedadChartOptions = {
@@ -397,15 +403,54 @@ cargarHistorico(): void {
     };
 
     this.humedadChartData = {
-      labels,
-      datasets: [
-        {
-          label: this.variableHumedad,
-          data: humedadValores
-        }
-      ]
-    };
+  labels,
+  datasets: [
+    {
+      label: this.variableHumedad,
+      data: humedadValores
+    },
+    {
+      label: 'PMP',
+      data: labels.map(() => pmp),
+      type: 'line',
+      pointRadius: 0,
+      borderWidth: 2,
+      tension: 0
+    },
+    {
+      label: 'CC',
+      data: labels.map(() => cc),
+      type: 'line',
+      pointRadius: 0,
+      borderWidth: 2,
+      tension: 0
+    }
+  ]
+};
   }
+
+  obtenerVelocidadViento(u: number, v: number): number {
+  return Math.sqrt(u * u + v * v);
+}
+
+obtenerDireccionViento(u: number, v: number): string {
+
+  const angulo = (Math.atan2(u, v) * 180 / Math.PI + 360) % 360;
+
+  const direcciones = [
+    'N',
+    'NE',
+    'E',
+    'SE',
+    'S',
+    'SO',
+    'O',
+    'NO'
+  ];
+
+  return direcciones[Math.round(angulo / 45) % 8];
+}
+
 
   agruparSerieGdd(serie: any[]): { labels: string[]; data: number[] } {
     const total = serie.length;
