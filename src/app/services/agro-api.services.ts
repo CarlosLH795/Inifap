@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class AgroApiService {
 
-  private apiUrl = 'http://10.20.55.232:8000';
+  private apiUrl = 'https://clima.inifap.gob.mx/wrf-api';
 
   constructor(private http: HttpClient) {}
 

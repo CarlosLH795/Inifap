@@ -7,7 +7,7 @@ import { HttpClient } from '@angular/common/http';
 export class UsuariosService {
 
   private http = inject(HttpClient);
-  private apiUrl = 'http://10.20.55.232:8000/api/admin/usuarios';
+  private apiUrl = 'https://clima.inifap.gob.mx/wrf-api/api/admin/usuarios';
 
   listar() {
   return this.http.get<any[]>(this.apiUrl, {
