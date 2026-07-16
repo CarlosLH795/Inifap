@@ -74,23 +74,59 @@ export class DashboardComponent implements OnInit {
   };
 
   gddChartOptions: ChartConfiguration<'line'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false,
-    plugins: {
-      legend: {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: false,
+
+  layout: {
+    padding: {
+      top: 10,
+      right: 10,
+      bottom: 28,
+      left: 5
+    }
+  },
+
+  plugins: {
+    legend: {
+      display: true,
+      position: 'top'
+    }
+  },
+
+  scales: {
+    x: {
+      display: true,
+      offset: false,
+
+      ticks: {
+        display: true,
+        autoSkip: true,
+        maxTicksLimit: 12,
+        maxRotation: 45,
+        minRotation: 30,
+        padding: 8
+      },
+
+      grid: {
         display: true
       }
     },
-    scales: {
-      x: {
+
+    y: {
+      display: true,
+      beginAtZero: true,
+
+      ticks: {
         display: true
       },
-      y: {
+
+      grid: {
         display: true
       }
     }
-  };
+  }
+};
 
   humedadChartData: ChartData<'bar' | 'line'> = {
     labels: [],
@@ -106,10 +142,48 @@ export class DashboardComponent implements OnInit {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const valor = Number(context.raw ?? 0);
+            return `${context.dataset.label}: ${valor.toFixed(2)}%`;
+          }
+        }
+      }
+    },
     scales: {
+      x: {
+        display: true,
+        offset: true,
+        ticks: {
+          display: true,
+          autoSkip: false,
+          maxRotation: 45,
+          minRotation: 30
+        },
+        grid: {
+          display: true
+        }
+      },
       y: {
-        min: 0,
-        max: 1
+        display: true,
+        title: {
+          display: true,
+          text: 'Humedad (%)'
+        },
+        ticks: {
+          display: true,
+          callback: (value) => `${value}%`
+        }
       }
     }
   };
@@ -123,7 +197,7 @@ export class DashboardComponent implements OnInit {
 }
 
 calcularFechaMinimaGdd(): string {
-  const fecha = new Date();
+  const fecha = new Date('1995-01-01');
 
   fecha.setFullYear(fecha.getFullYear() - 5);
 
@@ -137,38 +211,7 @@ calcularFechaMaximaGdd(): string {
   return this.formatearFechaInput(fecha);
 }
 
-validarRangoGdd(): boolean {
 
-  if (this.fechaInicio < this.fechaMinimaGdd) {
-
-    this.fechaInicio = this.fechaMinimaGdd;
-
-    this.errorHistorico =
-      `La fecha inicio no puede ser menor a ${this.fechaMinimaGdd}`;
-
-    return false;
-  }
-
-  if (this.fechaFin > this.fechaMaximaGdd) {
-
-    this.fechaFin = this.fechaMaximaGdd;
-
-    this.errorHistorico =
-      `La fecha fin no puede ser mayor a ${this.fechaMaximaGdd}`;
-
-    return false;
-  }
-
-  if (this.fechaInicio > this.fechaFin) {
-
-    this.errorHistorico =
-      'La fecha inicio no puede ser mayor que la fecha fin';
-
-    return false;
-  }
-
-  return true;
-}
 
   constructor(
     private router: Router,
@@ -277,9 +320,19 @@ validarRangoGdd(): boolean {
   }
 
 cargarHistorico(): void {
-  if (!this.validarRangoGdd()) {
+ 
+const inicio = new Date(this.fechaInicio);
+const limite = new Date(inicio);
+
+limite.setFullYear(limite.getFullYear() + 5);
+
+if (new Date(this.fechaFin) > limite) {
+
+    this.errorHistorico =
+      'El rango entre las fechas no puede ser mayor a 5 años.';
+
     return;
-  }
+}
 
   this.cargandoHistorico = true;
   this.errorHistorico = '';
@@ -358,75 +411,189 @@ cargarHistorico(): void {
   }
 
   actualizarGraficaHumedad(resp: any): void {
-    if (!resp || !resp.pronostico || !resp.referencia) {
+    if (
+      !resp ||
+      !Array.isArray(resp.pronostico) ||
+      !resp.referencia
+    ) {
       return;
     }
 
-    const labels = resp.pronostico.map((x: any) => x.fecha);
-    const humedadValores = resp.pronostico.map((x: any) => x.valor);
-
-    const pmp = resp.referencia.pmp;
-    const cc = resp.referencia.cc;
-
-    this.umbralRiego = (pmp + cc) / 2;
-
-    const valorActual = humedadValores[0];
-
-    if (valorActual < this.umbralRiego) {
-      this.recomendacionRiego = 'Regar';
-    } else {
-      this.recomendacionRiego = 'No regar';
-    }
-
-    const valoresValidos = humedadValores.filter(
-      (x: any) => x !== null && x !== undefined
+    const labels: string[] = resp.pronostico.map(
+      (x: any) => String(x.fecha)
     );
 
-    const minValor = Math.min(pmp, cc, ...valoresValidos);
-    const maxValor = Math.max(pmp, cc, ...valoresValidos);
-    const margen = Math.abs(maxValor - minValor) * 0.08 || 0.1;
+    /*
+     * La API conserva los valores originales.
+     * Solo para la gráfica se divide entre 2 y se presenta como porcentaje.
+     * Se aplica la misma transformación a humedad, PMP y CC para mantener
+     * las tres series en una escala comparable.
+     */
+    const convertirAPorcentaje = (valor: unknown): number | null => {
+      if (valor === null || valor === undefined || valor === '') {
+        return null;
+      }
+
+      const numero = Number(valor);
+
+      if (!Number.isFinite(numero)) {
+        return null;
+      }
+
+      return Number((numero / 100).toFixed(4));
+    };
+
+    const humedadValoresOriginales: Array<number | null> =
+      resp.pronostico.map((x: any) => {
+        const numero = Number(x.valor);
+        return Number.isFinite(numero) ? numero : null;
+      });
+
+    const humedadValores: Array<number | null> =
+      humedadValoresOriginales.map(convertirAPorcentaje);
+
+    const pmpOriginal = Number(resp.referencia.pmp);
+    const ccOriginal = Number(resp.referencia.cc);
+
+    const pmpGrafica = pmpOriginal;
+    const ccGrafica = ccOriginal;
+
+    /*
+     * La recomendación de riego sigue usando los valores originales
+     * entregados por la API, no los valores transformados de la gráfica.
+     */
+    this.umbralRiego = (pmpOriginal + ccOriginal) / 2;
+
+    const valorA = humedadValoresOriginales.find(
+      (valor): valor is number => valor !== null
+    );
+    
+    const valorActual = Number(valorA)/100;
+
+    this.recomendacionRiego =
+      valorActual !== undefined && valorActual < this.umbralRiego
+        ? 'Regar'
+        : 'No regar';
+
+    const valoresEscala = [
+      ...humedadValores.filter(
+        (valor): valor is number => valor !== null
+      ),
+      ...(pmpGrafica !== null ? [pmpGrafica] : []),
+      ...(ccGrafica !== null ? [ccGrafica] : [])
+    ];
+
+    if (valoresEscala.length === 0) {
+      return;
+    }
+
+    const minValor = Math.min(...valoresEscala);
+    const maxValor = Math.max(...valoresEscala);
+    const diferencia = maxValor - minValor;
+    const margen = diferencia > 0 ? diferencia * 0.12 : 1;
 
     this.humedadChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      layout: {
+        padding: {
+          top: 4,
+          right: 8,
+          bottom: 8,
+          left: 4
+        }
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+         tooltip: {
+    callbacks: {
+      label: (context: any) => {
+        return `${context.dataset.label}: ${(context.parsed.y * 100).toFixed(0)}%`;
+      }
+    }
+  }
+      },
       scales: {
+        x: {
+          display: true,
+          offset: true,
+          ticks: {
+            display: true,
+            autoSkip: false,
+            maxRotation: 45,
+            minRotation: 30,
+            padding: 8
+          },
+          grid: {
+            display: true
+          }
+        },
         y: {
-          min: minValor - margen,
-          max: maxValor + margen,
+          display: true,
+          suggestedMin: minValor - margen,
+          suggestedMax: maxValor + margen,
           title: {
             display: true,
-            text: 'Humedad de suelo'
+            text: 'Humedad (%)'
+          },
+          ticks: {
+  callback: (value: any) => `${Number(value * 100).toFixed(0)}%`
+},
+          grid: {
+            display: true
           }
         }
       }
     };
 
     this.humedadChartData = {
-  labels,
-  datasets: [
-    {
-      label: this.variableHumedad,
-      data: humedadValores
-    },
-    {
-      label: 'PMP',
-      data: labels.map(() => pmp),
-      type: 'line',
-      pointRadius: 0,
-      borderWidth: 2,
-      tension: 0
-    },
-    {
-      label: 'CC',
-      data: labels.map(() => cc),
-      type: 'line',
-      pointRadius: 0,
-      borderWidth: 2,
-      tension: 0
-    }
-  ]
-};
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: this.variableHumedad,
+          data: humedadValores,
+          order: 3,
+          backgroundColor: '#96caf5',
+borderColor: '#96c7ee',
+borderWidth: 1
+        },
+        {
+          type: 'line',
+          label: 'PMP',
+          data: labels.map(() => pmpGrafica),
+          borderColor: '#ff4f75',
+          backgroundColor: 'rgba(255, 79, 117, 0.20)',
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          borderWidth: 3,
+          tension: 0,
+          spanGaps: true,
+          order: 1
+        },
+        {
+          type: 'line',
+          label: 'CC',
+          data: labels.map(() => ccGrafica),
+          borderColor: '#ff9f40',
+          backgroundColor: 'rgba(255, 159, 64, 0.20)',
+          pointRadius: 0,
+          pointHoverRadius: 3,
+          borderWidth: 3,
+          tension: 0,
+          spanGaps: true,
+          order: 2
+        }
+      ]
+    };
   }
 
   obtenerVelocidadViento(u: number, v: number): number {

@@ -73,59 +73,69 @@
 
     <section class="grid">
 
-     <div class="panel large">
-  <h3>Humedad de suelo</h3>
+      <div class="panel large">
+        <h3>Humedad de suelo</h3>
 
-  <select [(ngModel)]="profundidad" (change)="cargarHumedad()">
-    <option value="0_5">Humedad de 0-5 cm</option>
-    <option value="5_15">Humedad de 5-15 cm</option>
-    <option value="15_30">Humedad de 15-30 cm</option>
-    <option value="30_60">Humedad de 30-60 cm</option>
-    <option value="60_100">Humedad de 60-100 cm</option>
-    <option value="100_200">Humedad de 100-200 cm</option>
-  </select>
+        <div class="humidity-controls">
+          <select
+            [(ngModel)]="profundidad"
+            (change)="cargarHumedad()"
+          >
+            <option value="0_5">Umbrales de 0-5 cm</option>
+            <option value="5_15">Umbrales de 5-15 cm</option>
+            <option value="15_30">Umbrales de 15-30 cm</option>
+            <option value="30_60">Umbrales de 30-60 cm</option>
+            <option value="60_100">Umbrales de 60-100 cm</option>
+            <option value="100_200">Umbrales de 100-200 cm</option>
+          </select>
 
-  <select [(ngModel)]="variableHumedad" (change)="cargarHumedad()">
-    <option value="soilw010">soilw010</option>
-    <option value="soilw1040">soilw1040</option>
-  </select>
+          <select
+            [(ngModel)]="variableHumedad"
+            (change)="cargarHumedad()"
+          >
+            <option value="soilw010">soilw010</option>
+            <option value="soilw1040">soilw1040</option>
+          </select>
+        </div>
 
-  <p *ngIf="humedad">
-    Estado: {{ humedad.estado.nom_ent }} |
-    PMP: {{ humedad.referencia.pmp }} |
-    CC: {{ humedad.referencia.cc }}
-  </p>
-  <div
-  class="riego-alerta"
-  [class.regar]="recomendacionRiego === 'Regar'"
-  [class.no-regar]="recomendacionRiego === 'No regar'">
+        <p *ngIf="humedad" class="humidity-reference">
+          Estado: {{ humedad.estado.nom_ent }} |
+          PMP: {{ humedad.referencia.pmp }} |
+          CC: {{ humedad.referencia.cc }}
+        </p>
 
-  <!--<strong>{{ recomendacionRiego }}</strong>-->
+        <div
+          class="riego-alerta"
+          [class.regar]="recomendacionRiego === 'Regar'"
+          [class.no-regar]="recomendacionRiego === 'No regar'"
+        >
+          <strong>{{ recomendacionRiego }}</strong>
+          <span>
+            Umbral medio:
+            {{ umbralRiego | number:'1.2-2' }}
+          </span>
+        </div>
 
-  <span>
-    Umbral medio:
-    {{ umbralRiego | number:'1.2-2' }}
-  </span>
+        <div class="chart-box" *ngIf="humedad">
+          @if (authService.puedeDescargar()) {
+            <div class="chart-actions">
+              <button (click)="descargarGraficaPNG('humedad')">PNG</button>
+              <button (click)="descargarCSV('humedad')">CSV</button>
+              <button (click)="descargarPDF('humedad')">PDF</button>
+            </div>
+          }
 
-</div>
-
-  <div class="chart-box"  *ngIf="humedad">
-    @if (authService.puedeDescargar()) {
-    <div class="chart-actions">
-  <button (click)="descargarGraficaPNG('humedad')">PNG</button>
-  <button (click)="descargarCSV('humedad')">CSV</button>
-  <button (click)="descargarPDF('humedad')">PDF</button>
-</div>
-}
-    <canvas
-  baseChart
-  #humedadChart="base-chart"
-  [data]="humedadChartData"
-  [options]="humedadChartOptions"
-  [type]="'bar'">
-</canvas>
-  </div>
-</div>
+          <div class="chart-canvas-wrap">
+            <canvas
+              baseChart
+              #humedadChart="base-chart"
+              [data]="humedadChartData"
+              [options]="humedadChartOptions"
+              [type]="'bar'"
+            ></canvas>
+          </div>
+        </div>
+      </div>
 
       <div class="panel">
 
@@ -169,15 +179,15 @@
 </div>
 
       
-       </section>
-     <!-- 
+     
+  
       
       <div class="panel large">
         <h3>Histórico GDD</h3>
         
         <div class="date-controls">
           <input type="date" [(ngModel)]="fechaInicio" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
-          <input type="date" [(ngModel)]="fechaFin" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
+          <input type="date" [(ngModel)]="fechaFin" [min]="fechaMinimaGdd"  [max]="fechaMaximaGdd">
           <select [(ngModel)]="cultivoGdd" (change)="cargarHistorico()">
             <option value="maiz">Maíz</option>
             <option value="frijol">Frijol</option>
@@ -195,7 +205,7 @@
 <p *ngIf="errorHistorico" class="error-text">
   {{ errorHistorico }}
 </p>
-<div class="chart-box" *ngIf="!cargandoHistorico">
+<div class="chart-box gdd-chart-box" *ngIf="!cargandoHistorico">
   @if (authService.puedeDescargar()) {
   <div class="chart-actions">
   <button (click)="descargarGraficaPNG('gdd')">PNG</button>
@@ -225,7 +235,7 @@
 
 
    
-  -->
+ </section>
   </main>
 
 </div>
