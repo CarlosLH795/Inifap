@@ -57,8 +57,11 @@ export class DashboardComponent implements OnInit {
   profundidad = '0_5';
   variableHumedad = 'soilw010';
 
-  fechaInicio = '2026-06-11';
-  fechaFin = '2026-06-15';
+  fechaInicio = new Date(
+  new Date().setDate(new Date().getDate() - 5)
+).toLocaleDateString('en-CA');
+
+fechaFin = new Date().toLocaleDateString('en-CA');
 
   gddChartData: ChartData<'line'> = {
     labels: [],
