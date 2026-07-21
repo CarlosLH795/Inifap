@@ -31,7 +31,7 @@
     </button>
 
     <div class="weather-main">
-      <p>Temperatura promedio</p>
+      <p>Temperatura promedio del día actual</p>
       <h1>{{ diaActual?.temp | number:'1.2-2' }}°C</h1>
       
     </div>
@@ -73,7 +73,8 @@
 
     <section class="grid">
 
-      <div class="panel large">
+        <div class="panel large humedad-panel">
+
         <h3>Humedad de suelo</h3>
 
         <div class="humidity-controls">
@@ -81,11 +82,9 @@
             [(ngModel)]="profundidad"
             (change)="cargarHumedad()"
           >
-            <option value="0_5">Umbrales de 0-5 cm</option>
-            <option value="5_15">Umbrales de 5-15 cm</option>
-            <option value="15_30">Umbrales de 15-30 cm</option>
-            <option value="30_60">Umbrales de 30-60 cm</option>
-            <option value="60_100">Umbrales de 60-100 cm</option>
+            <option value="0_10">Umbrales de 0-10 cm</option>
+            <option value="10_40">Umbrales de 10-40 cm</option>
+            <option value="40_100">Umbrales de 40-100 cm</option>
             <option value="100_200">Umbrales de 100-200 cm</option>
           </select>
 
@@ -137,38 +136,45 @@
         </div>
       </div>
 
-      <div class="panel">
+     <div class="panel convectivo-panel">
 
-  <h3>🌬️ Condiciones del viento para la fecha actual</h3>
-
+  <h3>⛈️ Potencial convectivo</h3>
+<p>
+  <strong>Punto de rocío:</strong>
+  {{ diaActual?.dewpoint | number:'1.1-1' }} °C
+</p>
   <p>
-    <b>Velocidad:</b>
-    {{ obtenerVelocidadViento(diaActual?.u, diaActual?.v) | number:'1.2-2' }}
-    m/s
+    <b>Helicidad relativa (0–3 km):</b>
+    {{ diaActual?.srh3000 | number:'1.0-0' }} m²/s²
   </p>
 
   <p>
-    <b>Dirección:</b>
-    {{ obtenerDireccionViento(diaActual?.u, diaActual?.v) }}
+    <b>Reflectividad máxima:</b>
+    {{ diaActual?.refmax | number:'1.2-2' }} dBZ
   </p>
 
   <p>
-    <b>Racha máxima:</b>
-    {{ diaActual?.gust | number:'1.2-2' }} m/s
+    <b>Granizo:</b>
+    {{ diaActual?.hail | number:'1.2-2' }}
+  </p>
+
+  <p>
+    <b>Graupel:</b>
+    {{ diaActual?.graupel | number:'1.2-2' }}
   </p>
 
   <hr>
 
-  <h3>🌱 Condiciones del suelo para la fecha actual</h3>
+  <h3>🌱 Condiciones del suelo</h3>
 
   <p>
     <b>Humedad superficial (0–10 cm):</b>
-    {{ diaActual?.soilw010 | number:'1.2-2' }}
+    {{ diaActual?.soilw010 | number:'1.2-2' }} %
   </p>
 
   <p>
     <b>Humedad radicular (10–40 cm):</b>
-    {{ diaActual?.soilw1040 | number:'1.2-2' }}
+    {{ diaActual?.soilw1040 | number:'1.2-2' }} %
   </p>
 
   <p>
@@ -182,7 +188,7 @@
      
   
       
-      <div class="panel large">
+     <div class="panel large gdd-panel">
         <h3>Histórico GDD</h3>
         
         <div class="date-controls">
@@ -205,6 +211,8 @@
 <p *ngIf="errorHistorico" class="error-text">
   {{ errorHistorico }}
 </p>
+
+
 <div class="chart-box gdd-chart-box" *ngIf="!cargandoHistorico">
   @if (authService.puedeDescargar()) {
   <div class="chart-actions">
@@ -212,6 +220,30 @@
   <button (click)="descargarCSV('gdd')">CSV</button>
   <button (click)="descargarPDF('gdd')">PDF</button>
 </div>
+
+ 
+<div class="gdd-resumen" *ngIf="historico?.serie?.length">
+
+  <div class="gdd-resumen-icono">
+    🌱
+  </div>
+
+  <div class="gdd-resumen-info">
+    <div class="gdd-resumen-titulo">
+      GDD ACUMULADO
+    </div>
+
+    <div class="gdd-resumen-valor">
+      {{ gddAcumulado | number:'1.2-2' }}
+    </div>
+
+    <div class="gdd-resumen-fechas">
+      {{ fechaInicio | date:'dd MMM' }} - {{ fechaFin | date:'dd MMM' }}
+    </div>
+  </div>
+
+</div>
+
 }
  <canvas
   baseChart
@@ -222,14 +254,6 @@
 </canvas>
 </div>
 </div>
-
-      <div class="panel">
-        <h3>Riesgo meteorológico</h3>
-
-        <p><b>Reflectividad:</b> {{ diaActual?.refmax | number:'1.2-2' }}</p>
-        <p><b>Granizo:</b> {{ diaActual?.hail | number:'1.2-2' }}</p>
-        <p><b>Graupel:</b> {{ diaActual?.graupel | number:'1.2-2' }}</p>
-      </div>
 
 
 

@@ -747,3 +747,174 @@ canvas {
     max-height: 340px !important;
   }
 }
+
+/* =========================================================
+   DISTRIBUCIÓN PRINCIPAL DEL DASHBOARD
+   ========================================================= */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* Humedad y panel convectivo con la misma altura */
+.humedad-panel,
+.convectivo-panel {
+  min-height: 560px;
+  height: 100%;
+}
+
+/* Panel derecho */
+.convectivo-panel {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* Histórico GDD ocupa las dos columnas */
+.gdd-panel {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 30px;
+}
+
+/* Contenedor de la gráfica GDD */
+.gdd-panel .gdd-chart-box {
+  width: 100%;
+  height: 390px;
+  min-height: 390px;
+  max-height: 390px;
+  position: relative;
+}
+
+/* Canvas GDD */
+.gdd-panel .gdd-chart-box canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 390px !important;
+}
+
+.humedad-panel .chart-box {
+  height: 330px;
+  min-height: 330px;
+  position: relative;
+}
+
+.humedad-panel .chart-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .humedad-panel,
+  .convectivo-panel {
+    min-height: auto;
+    height: auto;
+  }
+
+  .gdd-panel {
+    grid-column: 1;
+  }
+
+  .gdd-panel .gdd-chart-box {
+    height: 340px;
+    min-height: 340px;
+    max-height: 340px;
+  }
+
+  .gdd-panel .gdd-chart-box canvas {
+    max-height: 340px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-grid {
+    gap: 14px;
+  }
+
+  .humedad-panel .chart-box {
+    height: 300px;
+    min-height: 300px;
+  }
+
+  .gdd-panel .gdd-chart-box {
+    height: 320px;
+    min-height: 320px;
+    max-height: 320px;
+  }
+
+  .gdd-panel .gdd-chart-box canvas {
+    max-height: 320px !important;
+  }
+}
+
+.gdd-resumen{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    padding:8px 12px;
+    margin:10px 0 6px;
+
+    background:#eef8ec;
+    border:1px solid #b7d8b9;
+    border-radius:10px;
+}
+
+.gdd-resumen-icono{
+    width:30px;
+    height:30px;
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:#2e7d32;
+    font-size:16px;
+}
+
+.gdd-resumen-info{
+    display:flex;
+    flex-direction:column;
+    line-height:1;
+}
+
+.gdd-resumen-titulo{
+    font-size:10px;
+    font-weight:700;
+    color:#2b4f30;
+    letter-spacing:.4px;
+    text-transform:uppercase;
+}
+
+.gdd-resumen-valor{
+    font-size:18px;
+    font-weight:700;
+    color:#0b4d2b;
+    margin:2px 0;
+}
+
+.gdd-resumen-fechas{
+    font-size:10px;
+    color:#6f7d6f;
+}
+
+@media (max-width: 600px) {
+  .gdd-resumen {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .gdd-resumen-valor {
+    font-size: 26px;
+  }
+}
