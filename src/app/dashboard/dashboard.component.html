@@ -88,13 +88,13 @@
             <option value="100_200">Umbrales de 100-200 cm</option>
           </select>
 
-          <select
-            [(ngModel)]="variableHumedad"
-            (change)="cargarHumedad()"
-          >
-            <option value="soilw010">soilw010</option>
-            <option value="soilw1040">soilw1040</option>
-          </select>
+         <select
+  [(ngModel)]="variableHumedad"
+  (change)="cambiarVariableHumedad()"
+>
+  <option value="soilw010">soilw010</option>
+  <option value="soilw1040">soilw1040</option>
+</select>
         </div>
 
         <p *ngIf="humedad" class="humidity-reference">
@@ -102,18 +102,46 @@
           PMP: {{ humedad.referencia.pmp }} |
           CC: {{ humedad.referencia.cc }}
         </p>
+<!--
+       <div
+  class="aud-card"
+  [ngClass]="audClase"
+>
+  <div class="aud-valor">
+    {{ aud | number:'1.0-1' }}%
+  </div>
 
-        <div
-          class="riego-alerta"
-          [class.regar]="recomendacionRiego === 'Regar'"
-          [class.no-regar]="recomendacionRiego === 'No regar'"
-        >
-          <strong>{{ recomendacionRiego }}</strong>
-          <span>
-            Umbral medio:
-            {{ umbralRiego | number:'1.2-2' }}
-          </span>
-        </div>
+  <div class="aud-info">
+    <div class="aud-etiqueta">
+      Agua útil disponible
+    </div>
+
+    <div class="aud-titulo">
+      {{ audTitulo }}
+    </div>
+
+    <div class="aud-mensaje">
+      {{ audMensaje }}
+    </div>
+
+    <div class="aud-datos">
+      <span>
+        Humedad WRF:
+        {{ humedadActualAud | number:'1.4-4' }} m³/m³
+      </span>
+
+      <span>
+        PMP:
+        {{ humedad?.referencia?.pmp | number:'1.4-4' }} m³/m³
+      </span>
+
+      <span>
+        CC:
+        {{ humedad?.referencia?.cc | number:'1.4-4' }} m³/m³
+      </span>
+    </div>
+  </div>
+</div>-->
 
         <div class="chart-box" *ngIf="humedad">
           @if (authService.puedeDescargar()) {

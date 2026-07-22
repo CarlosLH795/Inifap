@@ -45,12 +45,28 @@ export class DashboardComponent implements OnInit {
   historico: any;
   humedad: any;
   cultivoGdd: 'maiz' | 'frijol' | 'sorgo' = 'frijol';
-  recomendacionRiego = '';
-  umbralRiego = 0;
+  aud = 0;
+  audTitulo = '';
+  audMensaje = '';
+  audClase = '';
+  humedadActualAud: number | null = null;
   pronosticoResumen: any[] = [];
   cargando = true;
   errorCarga = '';
   gddAcumulado = 0;
+
+  // Contiene la información exacta de cada punto mostrado en la gráfica.
+  // Para consultas cortas representa un día; para consultas largas,
+  // un bloque semanal o mensual.
+  gddSerieGrafica: Array<{
+    fechaInicio: string;
+    fechaFin: string;
+    dias: number;
+    gdd: number;
+    tmax: number | null;
+    tmin: number | null;
+  }> = [];
+
   cargandoHistorico = false;
   errorHistorico = '';
 
@@ -94,6 +110,40 @@ fechaFin = new Date().toLocaleDateString('en-CA');
     legend: {
       display: true,
       position: 'top'
+    },
+    tooltip: {
+      callbacks: {
+        title: (items) => {
+          const punto = this.gddSerieGrafica[items[0]?.dataIndex];
+
+          if (!punto) {
+            return String(items[0]?.label ?? '');
+          }
+
+          return punto.fechaInicio === punto.fechaFin
+            ? punto.fechaInicio
+            : `${punto.fechaInicio} al ${punto.fechaFin}`;
+        },
+        label: (context) => {
+          const punto = this.gddSerieGrafica[context.dataIndex];
+          const gdd = punto?.gdd ?? Number(context.raw ?? 0);
+
+          return [
+            `GDD ${this.cultivoGdd.toUpperCase()}: ${gdd.toFixed(2)}`,
+            `Tmax promedio: ${
+              punto?.tmax !== null && punto?.tmax !== undefined
+                ? punto.tmax.toFixed(2)
+                : '-'
+            } °C`,
+            `Tmin promedio: ${
+              punto?.tmin !== null && punto?.tmin !== undefined
+                ? punto.tmin.toFixed(2)
+                : '-'
+            } °C`,
+            `Días representados: ${punto?.dias ?? 1}`
+          ];
+        }
+      }
     }
   },
 
@@ -374,6 +424,8 @@ if (new Date(this.fechaFin) > limite) {
 );
       const serieGrafica = this.agruparSerieGdd(resp.serie);
 
+      this.gddSerieGrafica = serieGrafica.puntos;
+
       this.gddChartData = {
         labels: serieGrafica.labels,
         datasets: [
@@ -382,6 +434,7 @@ if (new Date(this.fechaFin) > limite) {
             data: serieGrafica.data,
             tension: 0.2,
             pointRadius: serieGrafica.data.length <= 90 ? 3 : 0,
+            pointHoverRadius: 5,
             borderWidth: 2
           }
         ]
@@ -418,6 +471,89 @@ this.actualizarGraficaHumedad(resp);
       });
   }
 
+  private convertirHumedadWrf(valor: unknown): number | null {
+    const numero = Number(valor);
+
+    if (!Number.isFinite(numero)) {
+      return null;
+    }
+
+    return Number((numero / 100).toFixed(4));
+  }
+
+  private calcularAud(
+    humedad: number | null,
+    pmp: number | null,
+    cc: number | null
+  ): number | null {
+    if (
+      humedad === null ||
+      pmp === null ||
+      cc === null ||
+      cc <= pmp
+    ) {
+      return null;
+    }
+
+    const resultado = ((humedad - pmp) / (cc - pmp)) * 100;
+
+    if (!Number.isFinite(resultado)) {
+      return null;
+    }
+
+    return Number(Math.max(0, resultado).toFixed(1));
+  }
+
+  private actualizarAlertaAud(
+    humedad: number | null,
+    pmp: number | null,
+    cc: number | null
+  ): void {
+    this.humedadActualAud = humedad;
+
+    const audCalculado = this.calcularAud(humedad, pmp, cc);
+
+    if (audCalculado === null) {
+      this.aud = 0;
+      this.audClase = 'aud-sin-datos';
+      this.audTitulo = 'Datos insuficientes';
+      this.audMensaje =
+        'No fue posible calcular el agua útil disponible para este punto.';
+      return;
+    }
+
+    this.aud = audCalculado;
+
+    if (this.aud > 100) {
+      this.audClase = 'aud-saturado';
+      this.audTitulo = 'Suelo saturado';
+      this.audMensaje =
+        'Existe riesgo de asfixia radicular si esta condición permanece.';
+      return;
+    }
+
+    if (this.aud >= 50) {
+      this.audClase = 'aud-optimo';
+      this.audTitulo = 'Zona de confort';
+      this.audMensaje =
+        'El cultivo dispone de agua útil suficiente en el suelo.';
+      return;
+    }
+
+    if (this.aud > 0) {
+      this.audClase = 'aud-riego';
+      this.audTitulo = 'Umbral de riego crítico';
+      this.audMensaje =
+        'Es necesario regar o vigilar el cultivo ante posible estrés hídrico.';
+      return;
+    }
+
+    this.audClase = 'aud-estres';
+    this.audTitulo = 'Punto de marchitez';
+    this.audMensaje =
+      'La disponibilidad de agua es prácticamente nula y existe riesgo severo para el cultivo.';
+  }
+
   actualizarGraficaHumedad(resp: any): void {
     if (
       !resp ||
@@ -432,34 +568,33 @@ this.actualizarGraficaHumedad(resp);
     );
 
     const humedadValores: Array<number | null> =
-      resp.pronostico.map((x: any) => {
-        const valor = Number(x.valor);
-        return Number.isFinite(valor) ? valor : null;
-      });
+      resp.pronostico.map((x: any) =>
+        this.convertirHumedadWrf(x.valor)
+      );
 
     const pmpNumero = Number(resp.referencia.pmp);
     const ccNumero = Number(resp.referencia.cc);
 
     const pmpGrafica: number | null =
-      Number.isFinite(pmpNumero) ? pmpNumero : null;
+      Number.isFinite(pmpNumero)
+        ? Number(pmpNumero.toFixed(4))
+        : null;
 
     const ccGrafica: number | null =
-      Number.isFinite(ccNumero) ? ccNumero : null;
+      Number.isFinite(ccNumero)
+        ? Number(ccNumero.toFixed(4))
+        : null;
 
-    this.umbralRiego =
-      pmpGrafica !== null && ccGrafica !== null
-        ? (pmpGrafica + ccGrafica) / 2
-        : 0;
+   const valorActual =
+      humedadValores.find(
+        (valor): valor is number => valor !== null
+      ) ?? null;
 
-    const valorActual = humedadValores.find(
-      (valor): valor is number => valor !== null
+    this.actualizarAlertaAud(
+      valorActual,
+      pmpGrafica,
+      ccGrafica
     );
-
-    this.recomendacionRiego =
-      valorActual !== undefined &&
-      valorActual < this.umbralRiego
-        ? 'Regar'
-        : 'No regar';
 
     const valoresEscala: number[] = [
       ...humedadValores.filter(
@@ -607,74 +742,109 @@ obtenerDireccionViento(u: number, v: number): string {
 }
 
 
-  agruparSerieGdd(serie: any[]): { labels: string[]; data: number[] } {
+  agruparSerieGdd(serie: any[]): {
+    labels: string[];
+    data: number[];
+    puntos: Array<{
+      fechaInicio: string;
+      fechaFin: string;
+      dias: number;
+      gdd: number;
+      tmax: number | null;
+      tmin: number | null;
+    }>;
+  } {
     const total = serie.length;
 
-    if (total <= 90) {
-      return {
-        labels: serie.map(x => x.fecha),
-        data: serie.map(x => x.gdd)
-      };
-    }
-
-    const grupo = total > 730 ? 30 : 7;
+    // Hasta 90 registros se muestra un punto por día.
+    const tamanoGrupo = total <= 90
+      ? 1
+      : total > 730
+        ? 30
+        : 7;
 
     const labels: string[] = [];
     const data: number[] = [];
+    const puntos: Array<{
+      fechaInicio: string;
+      fechaFin: string;
+      dias: number;
+      gdd: number;
+      tmax: number | null;
+      tmin: number | null;
+    }> = [];
 
-    for (let i = 0; i < serie.length; i += grupo) {
-      const bloque = serie.slice(i, i + grupo);
-
+    const promedioValido = (
+      bloque: any[],
+      campo: 'gdd' | 'tmax' | 'tmin'
+    ): number | null => {
       const valores = bloque
-        .map(x => x.gdd)
-        .filter(x => x !== null && x !== undefined);
+        .map(item => Number(item?.[campo]))
+        .filter(valor => Number.isFinite(valor));
 
       if (valores.length === 0) {
-        continue;
+        return null;
       }
 
       const promedio =
-        valores.reduce((a: number, b: number) => a + b, 0) / valores.length;
+        valores.reduce((acumulado, valor) => acumulado + valor, 0)
+        / valores.length;
 
-      labels.push(bloque[0].fecha);
-      data.push(Number(promedio.toFixed(2)));
+      return Number(promedio.toFixed(2));
+    };
+
+    for (let i = 0; i < serie.length; i += tamanoGrupo) {
+      const bloque = serie.slice(i, i + tamanoGrupo);
+
+      if (bloque.length === 0) {
+        continue;
+      }
+
+      const gddPromedio = promedioValido(bloque, 'gdd');
+
+      if (gddPromedio === null) {
+        continue;
+      }
+
+      const fechaInicio = String(bloque[0].fecha);
+      const fechaFin = String(bloque[bloque.length - 1].fecha);
+      const tmaxPromedio = promedioValido(bloque, 'tmax');
+      const tminPromedio = promedioValido(bloque, 'tmin');
+
+      labels.push(
+        tamanoGrupo === 1
+          ? fechaInicio
+          : `${fechaInicio} - ${fechaFin}`
+      );
+
+      data.push(gddPromedio);
+
+      puntos.push({
+        fechaInicio,
+        fechaFin,
+        dias: bloque.length,
+        gdd: gddPromedio,
+        tmax: tmaxPromedio,
+        tmin: tminPromedio
+      });
     }
 
     return {
       labels,
-      data
+      data,
+      puntos
     };
   }
-
-  private readonly variablePorProfundidad: Record<string, string> = {
-  '0_10': 'soilw010',
-  '10_40': 'soilw1040'
-};
-
 
   cambiarProfundidad(): void {
-  const variable = this.variablePorProfundidad[this.profundidad];
-
-  if (!variable) {
-    this.errorCarga =
-      `No existe una variable WRF disponible para la profundidad ${this.profundidad.replace('_', '-')} cm.`;
-
-    this.humedad = null;
-
-    this.humedadChartData = {
-      labels: [],
-      datasets: []
-    };
-
-    this.humedadChart?.update();
-    return;
+    this.errorCarga = '';
+    this.cargarHumedad();
   }
 
-  this.variableHumedad = variable;
-  this.errorCarga = '';
-
-  this.cargarHumedad();
-}
+  cambiarVariableHumedad(): void {
+    this.errorCarga = '';
+    this.cargarHumedad();
+  }
 
   private getEstadoHumedad(): string {
     const estado = this.humedad?.estado;
@@ -788,10 +958,25 @@ obtenerDireccionViento(u: number, v: number): string {
 
       this.dibujarTextoPNG(ctx, `PMP: ${this.formatoNumero(pmp, 4)} m³/m³`, 25, y);
       this.dibujarTextoPNG(ctx, `CC: ${this.formatoNumero(cc, 4)} m³/m³`, 300, y);
-      this.dibujarTextoPNG(ctx, `Umbral medio: ${this.formatoNumero(this.umbralRiego, 4)} m³/m³`, 520, y);
+      this.dibujarTextoPNG(
+        ctx,
+        `Humedad WRF: ${this.formatoNumero(this.humedadActualAud, 4)} m³/m³`,
+        520,
+        y
+      );
       y += 28;
 
-      this.dibujarTextoPNG(ctx, `Recomendación: ${this.recomendacionRiego}`, 25, y, '18px Arial', '#1b5e20');
+      this.dibujarTextoPNG(
+        ctx,
+        `AUD: ${this.formatoNumero(this.aud, 1)}% - ${this.audTitulo}`,
+        25,
+        y,
+        'bold 18px Arial',
+        '#1b5e20'
+      );
+      y += 26;
+
+      this.dibujarTextoPNG(ctx, this.audMensaje, 25, y, '15px Arial');
       y += 35;
 
       this.dibujarTextoPNG(ctx, 'Fecha', 25, y, 'bold 16px Arial');
@@ -800,7 +985,13 @@ obtenerDireccionViento(u: number, v: number): string {
 
       this.humedad?.pronostico?.forEach((d: any) => {
         this.dibujarTextoPNG(ctx, String(d.fecha), 25, y);
-        this.dibujarTextoPNG(ctx, `${this.formatoNumero(d.valor, 4)} m³/m³`, 200, y);
+        const humedadConvertida = this.convertirHumedadWrf(d.valor);
+        this.dibujarTextoPNG(
+          ctx,
+          `${this.formatoNumero(humedadConvertida, 4)} m³/m³`,
+          200,
+          y
+        );
         y += 22;
       });
 
@@ -884,10 +1075,18 @@ obtenerDireccionViento(u: number, v: number): string {
       const cc = this.humedad?.referencia?.cc ?? '';
       const estado = this.getEstadoHumedad();
 
-      let csv = 'lat,lon,estado,profundidad,variable,unidad,pmp,cc,fecha,humedad\n';
+      let csv =
+        'lat,lon,estado,profundidad,variable,unidad,pmp,cc,fecha,humedad_wrf,aud_porcentaje\n';
 
       this.humedad?.pronostico?.forEach((x: any) => {
-        csv += `${this.lat},${this.lon},${estado},${this.profundidad},${this.variableHumedad},m3/m3,${pmp},${cc},${x.fecha},${x.valor}\n`;
+        const humedadConvertida = this.convertirHumedadWrf(x.valor);
+        const audFecha = this.calcularAud(
+          humedadConvertida,
+          Number.isFinite(Number(pmp)) ? Number(pmp) : null,
+          Number.isFinite(Number(cc)) ? Number(cc) : null
+        );
+
+        csv += `${this.lat},${this.lon},${estado},${this.profundidad},${this.variableHumedad},m3/m3,${pmp},${cc},${x.fecha},${humedadConvertida ?? ''},${audFecha ?? ''}\n`;
       });
 
       this.descargarBlob(
@@ -956,10 +1155,22 @@ obtenerDireccionViento(u: number, v: number): string {
 
       pdf.text(`PMP: ${this.formatoNumero(pmp, 4)} m³/m³`, 15, 39);
       pdf.text(`CC: ${this.formatoNumero(cc, 4)} m³/m³`, 80, 39);
-      pdf.text(`Umbral medio: ${this.formatoNumero(this.umbralRiego, 4)} m³/m³`, 150, 39);
-      pdf.text(`Recomendación: ${this.recomendacionRiego}`, 220, 39);
+      pdf.text(
+        `Humedad WRF: ${this.formatoNumero(this.humedadActualAud, 4)} m³/m³`,
+        150,
+        39
+      );
 
-      let y = 50;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(
+        `AUD: ${this.formatoNumero(this.aud, 1)}% - ${this.audTitulo}`,
+        15,
+        47
+      );
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(this.audMensaje, 80, 47);
+
+      let y = 58;
 
       pdf.setFontSize(9);
       pdf.text('Fecha', 15, y);
@@ -969,11 +1180,16 @@ obtenerDireccionViento(u: number, v: number): string {
 
       this.humedad?.pronostico?.forEach((d: any) => {
         pdf.text(String(d.fecha), 15, y);
-        pdf.text(`${this.formatoNumero(d.valor, 4)} m³/m³`, 55, y);
+        const humedadConvertida = this.convertirHumedadWrf(d.valor);
+        pdf.text(
+          `${this.formatoNumero(humedadConvertida, 4)} m³/m³`,
+          55,
+          y
+        );
         y += 6;
       });
 
-      pdf.addImage(img, 'PNG', 90, 48, 185, 115);
+      pdf.addImage(img, 'PNG', 90, 58, 185, 110);
 
       pdf.save('reporte_humedad_suelo.pdf');
       return;
