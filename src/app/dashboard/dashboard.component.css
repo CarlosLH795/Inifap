@@ -1051,3 +1051,150 @@ canvas {
     justify-content: flex-start;
   }
 }
+
+/* =========================================================
+   ALERTA VPD
+   ========================================================= */
+
+.vpd-card {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 4px 0 20px;
+  padding: 14px;
+  border: 1px solid;
+  border-radius: 13px;
+}
+
+.vpd-valor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 76px;
+  padding: 10px 6px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+  text-align: center;
+}
+
+.vpd-valor small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.vpd-info {
+  min-width: 0;
+}
+
+.vpd-etiqueta {
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.vpd-titulo {
+  margin-bottom: 4px;
+  font-size: 17px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.vpd-mensaje {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.vpd-datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* VPD menor de 0.4 */
+.vpd-muy-humedo {
+  color: #07556b;
+  background: #d9f2f7;
+  border-color: #69bdcf;
+}
+
+/* VPD de 0.4 a 0.8 */
+.vpd-humedo {
+  color: #245a30;
+  background: #e4f4e5;
+  border-color: #91cb98;
+}
+
+/* VPD de 0.8 a 1.2 */
+.vpd-optimo {
+  color: #155724;
+  background: #dff3e3;
+  border-color: #79c689;
+}
+
+/* VPD de 1.2 a 2.0 */
+.vpd-seco {
+  color: #795500;
+  background: #fff3cd;
+  border-color: #dfb84c;
+}
+
+/* VPD mayor de 2.0 */
+.vpd-estres {
+  color: #8b1e24;
+  background: #fde2e4;
+  border-color: #df9298;
+}
+
+.vpd-sin-datos {
+  color: #4f5b62;
+  background: #eef1f3;
+  border-color: #c7cfd4;
+}
+
+@media (max-width: 768px) {
+  .vpd-card {
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .vpd-valor {
+    min-height: 66px;
+    font-size: 22px;
+  }
+
+  .vpd-titulo {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 430px) {
+  .vpd-card {
+    grid-template-columns: 1fr;
+  }
+
+  .vpd-valor {
+    align-items: flex-start;
+    min-height: auto;
+    text-align: left;
+  }
+
+  .vpd-datos {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

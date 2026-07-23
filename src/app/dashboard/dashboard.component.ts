@@ -54,7 +54,10 @@ export class DashboardComponent implements OnInit {
   cargando = true;
   errorCarga = '';
   gddAcumulado = 0;
-
+  vpdActual: number | null = null;
+  vpdClase = 'vpd-sin-datos';
+  vpdTitulo = 'Datos insuficientes';
+  vpdMensaje = 'No fue posible calcular el déficit de presión de vapor.';
   // Contiene la información exacta de cada punto mostrado en la gráfica.
   // Para consultas cortas representa un día; para consultas largas,
   // un bloque semanal o mensual.
@@ -324,6 +327,10 @@ calcularFechaMaximaGdd(): string {
         if (resp.wrf) {
           this.wrf = resp.wrf;
           this.diaActual = resp.wrf?.serie?.[0]?.variables;
+          this.actualizarAlertaVpd(
+                this.diaActual?.temp,
+                this.diaActual?.rh
+                  );
           this.pronosticoResumen = resp.wrf?.serie?.slice(0, 5).map((d: any) => ({
               fecha: d.fecha,
               tmax: d.variables?.tmax,
@@ -366,6 +373,10 @@ this.actualizarGraficaHumedad(resp.humedad);
       next: (resp: any) => {
         this.wrf = resp;
         this.diaActual = resp?.serie?.[0]?.variables;
+        this.actualizarAlertaVpd(
+            this.diaActual?.temp,
+            this.diaActual?.rh
+          );
       },
       error: (err) => {
         console.error('Error cargando WRF:', err);
@@ -718,6 +729,101 @@ this.actualizarGraficaHumedad(resp);
       ]
     };
   }
+
+  calcularVpd(
+  temperatura: unknown,
+  humedadRelativa: unknown
+): number | null {
+
+  const temp = Number(temperatura);
+  const rh = Number(humedadRelativa);
+
+  if (
+    !Number.isFinite(temp) ||
+    !Number.isFinite(rh) ||
+    rh < 0 ||
+    rh > 100
+  ) {
+    return null;
+  }
+
+  const presionSaturacion =
+    0.6108 *
+    Math.exp(
+      (17.27 * temp) /
+      (temp + 237.3)
+    );
+
+  const presionReal =
+    presionSaturacion *
+    (rh / 100);
+
+  const vpd =
+    presionSaturacion -
+    presionReal;
+
+  return Number(
+    Math.max(0, vpd).toFixed(2)
+  );
+}
+
+
+actualizarAlertaVpd(
+  temperatura: unknown,
+  humedadRelativa: unknown
+): void {
+
+  this.vpdActual =
+    this.calcularVpd(
+      temperatura,
+      humedadRelativa
+    );
+
+  if (this.vpdActual === null) {
+    this.vpdClase = 'vpd-sin-datos';
+    this.vpdTitulo = 'Datos insuficientes';
+    this.vpdMensaje =
+      'No fue posible calcular el déficit de presión de vapor.';
+    return;
+  }
+
+  if (this.vpdActual < 0.4) {
+    this.vpdClase = 'vpd-muy-humedo';
+    this.vpdTitulo = 'Humedad muy alta';
+    this.vpdMensaje =
+      'Existe mayor riesgo de enfermedades de origen fúngico.';
+    return;
+  }
+
+  if (this.vpdActual < 0.8) {
+    this.vpdClase = 'vpd-humedo';
+    this.vpdTitulo = 'Ambiente húmedo';
+    this.vpdMensaje =
+      'La demanda atmosférica de agua es baja.';
+    return;
+  }
+
+  if (this.vpdActual <= 1.2) {
+    this.vpdClase = 'vpd-optimo';
+    this.vpdTitulo = 'Rango óptimo';
+    this.vpdMensaje =
+      'Condiciones favorables para la mayoría de los cultivos.';
+    return;
+  }
+
+  if (this.vpdActual <= 2.0) {
+    this.vpdClase = 'vpd-seco';
+    this.vpdTitulo = 'Demanda evaporativa alta';
+    this.vpdMensaje =
+      'Conviene vigilar el estado hídrico del cultivo.';
+    return;
+  }
+
+  this.vpdClase = 'vpd-estres';
+  this.vpdTitulo = 'Estrés atmosférico';
+  this.vpdMensaje =
+    'El aire está muy seco y la planta puede cerrar sus estomas.';
+}
 
   obtenerVelocidadViento(u: number, v: number): number {
   return Math.sqrt(u * u + v * v);

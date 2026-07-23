@@ -167,6 +167,52 @@
      <div class="panel convectivo-panel">
 
   <h3>⛈️ Potencial convectivo</h3>
+
+  <div
+  class="vpd-card"
+  [ngClass]="vpdClase"
+>
+
+  <div class="vpd-valor">
+    <span *ngIf="vpdActual !== null">
+      {{ vpdActual | number:'1.2-2' }}
+      <small>kPa</small>
+    </span>
+
+    <span *ngIf="vpdActual === null">
+      —
+    </span>
+  </div>
+
+  <div class="vpd-info">
+
+    <div class="vpd-etiqueta">
+      Déficit de presión de vapor
+    </div>
+
+    <div class="vpd-titulo">
+      {{ vpdTitulo }}
+    </div>
+
+    <div class="vpd-mensaje">
+      {{ vpdMensaje }}
+    </div>
+
+    <div class="vpd-datos">
+      <span>
+        Temperatura:
+        {{ diaActual?.temp | number:'1.1-1' }} °C
+      </span>
+
+      <span>
+        HR:
+        {{ diaActual?.rh | number:'1.0-0' }} %
+      </span>
+    </div>
+
+  </div>
+
+</div>
 <p>
   <strong>Punto de rocío:</strong>
   {{ diaActual?.dewpoint | number:'1.1-1' }} °C
