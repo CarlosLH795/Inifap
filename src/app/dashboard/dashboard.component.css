@@ -286,14 +286,7 @@ canvas {
   margin-bottom: 15px;
 }
 
-.date-controls input,
-.date-controls select,
-.panel select {
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  max-width: 100%;
-}
+
 
 .date-controls button {
   padding: 8px 14px;
@@ -1111,8 +1104,9 @@ canvas {
 }
 
 .vpd-mensaje {
-  font-size: 12px;
-  line-height: 1.35;
+  font-size: 14px;
+  line-height: 1.75;
+   font-weight: 600;
 }
 
 .vpd-datos {
@@ -1120,7 +1114,7 @@ canvas {
   flex-wrap: wrap;
   gap: 5px 12px;
   margin-top: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1196,5 +1190,574 @@ canvas {
   .vpd-datos {
     display: grid;
     grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   PANEL DERECHO: VPD Y ET0
+   ========================================================= */
+
+.indicadores-panel {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  height: 100%;
+  min-height: 560px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.indicador-seccion {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 20px;
+  background: white;
+}
+
+.indicador-seccion + .indicador-seccion {
+  border-top: 1px solid #e5e5e5;
+}
+
+.indicador-seccion h3 {
+  margin: 0 0 16px;
+  color: #234028;
+  font-size: 20px;
+}
+
+.indicador-atmosferico {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+
+  padding: 18px;
+  border: 1px solid;
+  border-radius: 13px;
+}
+.indicador-valor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 92px;
+  min-width: 105px;
+
+  padding: 14px 10px;
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.68);
+
+  font-size: 34px;
+  line-height: 1;
+  font-weight: 800;
+  text-align: center;
+}
+
+.indicador-valor small {
+  display: block;
+  margin-top: 7px;
+
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.indicador-titulo {
+  margin-bottom: 7px;
+
+  font-size: 20px;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.indicador-mensaje {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.indicador-datos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 16px;
+
+  margin-top: 11px;
+
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .indicador-atmosferico {
+    grid-template-columns: 100px minmax(0, 1fr);
+    gap: 14px;
+    padding: 15px;
+  }
+
+  .indicador-valor {
+    min-height: 82px;
+    min-width: 0;
+    font-size: 29px;
+  }
+
+  .indicador-titulo {
+    font-size: 18px;
+  }
+
+  .indicador-mensaje {
+    font-size: 13px;
+  }
+
+  .indicador-datos {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .indicador-atmosferico {
+    grid-template-columns: 1fr;
+  }
+
+  .indicador-valor {
+    min-height: auto;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+/* ET0 */
+.et0-card {
+  color: #704900;
+  background: #fff0d8;
+  border-color: #dcaa54;
+}
+
+/* VPD */
+.vpd-muy-humedo {
+  color: #07556b;
+  background: #d9f2f7;
+  border-color: #69bdcf;
+}
+
+.vpd-humedo {
+  color: #245a30;
+  background: #e4f4e5;
+  border-color: #91cb98;
+}
+
+.vpd-optimo {
+  color: #155724;
+  background: #dff3e3;
+  border-color: #79c689;
+}
+
+.vpd-seco {
+  color: #795500;
+  background: #fff3cd;
+  border-color: #dfb84c;
+}
+
+.vpd-estres {
+  color: #8b1e24;
+  background: #fde2e4;
+  border-color: #df9298;
+}
+
+.vpd-sin-datos {
+  color: #4f5b62;
+  background: #eef1f3;
+  border-color: #c7cfd4;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 10px 0;
+}
+
+.sidebar-logo img {
+  display: block;
+
+  width: min(100%, 210px);
+  max-height: 100px;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 768px) {
+  .sidebar-logo {
+    justify-content: center;
+  }
+
+  .sidebar-logo img {
+    width: min(100%, 190px);
+    max-height: 85px;
+  }
+}
+
+/* =========================================================
+   CORRECCIÓN DE EJES X EN MÓVIL
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .humedad-panel {
+    padding-bottom: 48px;
+    overflow: visible;
+  }
+
+  .humedad-panel .chart-box {
+    height: 380px;
+    min-height: 380px;
+    overflow: visible;
+    margin-bottom: 20px;
+  }
+
+  .humedad-panel .chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .gdd-panel {
+    padding-bottom: 80px;
+    overflow: visible;
+  }
+
+  .gdd-panel .gdd-chart-box {
+    height: 420px;
+    min-height: 420px;
+    overflow: visible;
+    margin-bottom: 24px;
+  }
+
+  .gdd-panel .gdd-chart-box canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .humedad-panel .chart-box {
+    height: 350px;
+    min-height: 300px;
+  }
+
+  .gdd-panel .gdd-chart-box {
+    height: 500px;
+    min-height: 500px;
+  }
+
+  .humedad-panel {
+    padding-bottom: 58px;
+  }
+
+  .gdd-panel {
+    padding-bottom: 100px;
+  }
+}
+
+/* =========================================================
+   FECHAS GDD EN IPHONE / SAFARI
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .date-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .date-controls input[type="date"],
+  .date-controls select,
+  .date-controls button {
+    width: 100%;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 14px;
+
+    border: 1px solid #c9c9c9;
+    border-radius: 10px;
+
+    font-size: 16px;
+    line-height: 48px;
+    font-family: Arial, sans-serif;
+
+    box-sizing: border-box;
+  }
+
+  .date-controls input[type="date"] {
+    display: block;
+    appearance: none;
+    -webkit-appearance: none;
+
+    text-align: left;
+    background: white;
+    color: #1f3324;
+  }
+
+  .date-controls input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    line-height: 48px;
+  }
+
+  .date-controls input[type="date"]::-webkit-calendar-picker-indicator {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    opacity: 0.75;
+  }
+
+  .date-controls select {
+    appearance: auto;
+    -webkit-appearance: menulist;
+    line-height: normal;
+  }
+
+  .date-controls button {
+    border: none;
+    background: #2e7d32;
+    color: white;
+    font-weight: 700;
+    line-height: normal;
+  }
+}
+
+
+.indicador-pronostico {
+  margin-top: 14px;
+}
+
+.indicador-pronostico-titulo {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #3d503f;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.indicador-pronostico-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.indicador-mini {
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid;
+  border-radius: 9px;
+  text-align: center;
+}
+
+.indicador-mini-fecha {
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.indicador-mini-valor {
+  font-size: 17px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.indicador-mini-valor small {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.indicador-mini-titulo {
+  margin-top: 5px;
+  font-size: 10px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.et0-baja {
+  color: #245a30;
+  background: #e4f4e5;
+  border-color: #91cb98;
+}
+
+.et0-moderada {
+  color: #5f5a00;
+  background: #f7f4d5;
+  border-color: #d4cb6e;
+}
+
+.et0-alta {
+  color: #795500;
+  background: #fff3cd;
+  border-color: #dfb84c;
+}
+
+.et0-muy-alta {
+  color: #8b3f00;
+  background: #ffe3c2;
+  border-color: #df9b4c;
+}
+
+.et0-sin-datos {
+  color: #4f5b62;
+  background: #eef1f3;
+  border-color: #c7cfd4;
+}
+
+@media (max-width: 600px) {
+  .indicador-pronostico-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .indicador-mini-valor {
+    font-size: 16px;
+  }
+}
+
+/* =========================================================
+   PANEL DERECHO COMPACTO: VPD Y ET0
+   ========================================================= */
+
+.indicadores-panel {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  height: 700px;
+  min-height: 700px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.indicador-seccion {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 16px;
+  background: white;
+}
+
+.indicador-seccion + .indicador-seccion {
+  border-top: 1px solid #e5e5e5;
+}
+
+.indicador-seccion h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  line-height: 1.15;
+  color: #234028;
+}
+
+/* Tarjeta principal */
+.indicador-atmosferico {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 128px;
+  padding: 14px;
+  border: 1px solid;
+  border-radius: 11px;
+}
+
+.indicador-valor {
+  min-width: 0;
+  min-height: 74px;
+  padding: 8px 5px;
+  border-radius: 9px;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.indicador-valor small {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.indicador-titulo {
+  margin-bottom: 3px;
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.indicador-mensaje {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.indicador-datos {
+  gap: 3px 9px;
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* Pronóstico compacto */
+.indicador-pronostico {
+  margin-top: 9px;
+}
+
+.indicador-pronostico-titulo {
+  margin-bottom: 5px;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.3px;
+}
+
+.indicador-pronostico-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.indicador-mini {
+  min-width: 0;
+  padding: 8px 5px;
+  border-radius: 7px;
+}
+
+.indicador-mini-fecha {
+  margin-bottom: 2px;
+  font-size: 9px;
+  line-height: 1;
+}
+
+.indicador-mini-valor {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.indicador-mini-valor small {
+  margin-top: 2px;
+  font-size: 8px;
+}
+
+.indicador-mini-titulo {
+  margin-top: 3px;
+  font-size: 8px;
+  line-height: 1.05;
+}
+
+@media (max-width: 900px) {
+  .indicadores-panel,
+  .humedad-panel {
+    height: auto;
+    min-height: auto;
+  }
+
+  .indicador-pronostico-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

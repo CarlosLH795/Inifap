@@ -24,20 +24,25 @@
 
   <aside class="sidebar">
 
-    <h2>🌱 Dashboard</h2>
+    <div class="sidebar-logo">
+  <img
+    src="assets/images/logini.png"
+    alt="INIFAP"
+  >
+</div>
 
     <button class="back-btn" (click)="volverMapa()">
       ← Volver al mapa
     </button>
 
     <div class="weather-main">
-      <p>Temperatura promedio del día actual</p>
+      <p>Temperatura promedio del día</p>
       <h1>{{ diaActual?.temp | number:'1.2-2' }}°C</h1>
       
     </div>
 
     <div class="location">
-      <span>Punto seleccionado</span>
+      <span>Dato coordenado</span>
       <p><b>Lat:</b> {{ lat | number:'1.4-4' }}</p>
       <p><b>Lon:</b> {{ lon | number:'1.4-4' }}</p>
     </div>
@@ -113,7 +118,7 @@
 
   <div class="aud-info">
     <div class="aud-etiqueta">
-      Agua útil disponible para hoy
+      Agua útil disponible
     </div>
 
     <div class="aud-titulo">
@@ -164,101 +169,153 @@
         </div>
       </div>
 
-     <div class="panel convectivo-panel">
+<div class="panel indicadores-panel">
 
-  <h3>⛈️ Potencial convectivo</h3>
+  <section class="indicador-seccion">
 
-  <div
-  class="vpd-card"
-  [ngClass]="vpdClase"
->
+    <h3>Déficit de presión de vapor</h3>
 
-  <div class="vpd-valor">
-    <span *ngIf="vpdActual !== null">
-      {{ vpdActual | number:'1.2-2' }}
-      <small>kPa</small>
-    </span>
+    <div
+      class="indicador-atmosferico vpd-card"
+      [ngClass]="vpdClase"
+    >
+      <div class="indicador-valor">
+        <ng-container *ngIf="vpdActual !== null; else sinVpd">
+          {{ vpdActual | number:'1.2-2' }}
+          <small>kPa</small>
+        </ng-container>
 
-    <span *ngIf="vpdActual === null">
-      —
-    </span>
+        <ng-template #sinVpd>
+          —
+        </ng-template>
+      </div>
+
+      <div class="indicador-info">
+        <div class="indicador-titulo">
+          {{ vpdTitulo }}
+        </div>
+
+        <div class="indicador-mensaje">
+          {{ vpdMensaje }}
+        </div>
+
+        <div class="indicador-datos">
+          <span>
+            Temperatura:
+            {{ diaActual?.temp | number:'1.1-1' }} °C
+          </span>
+
+          <span>
+            HR:
+            {{ diaActual?.rh | number:'1.0-0' }} %
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="indicador-pronostico">
+  <div class="indicador-pronostico-titulo">
+    Pronóstico próximos días
   </div>
 
-  <div class="vpd-info">
+  <div class="indicador-pronostico-grid">
+    <div
+      *ngFor="let dia of pronosticoVpd.slice(1)"
+      class="indicador-mini"
+      [ngClass]="dia.clase"
+    >
+      <div class="indicador-mini-fecha">
+        {{ dia.fecha | date:'dd MMM' }}
+      </div>
 
-    <div class="vpd-etiqueta">
-      Déficit de presión de vapor
+      <div class="indicador-mini-valor">
+        {{ dia.valor | number:'1.2-2' }}
+        <small>kPa</small>
+      </div>
+
+      <div class="indicador-mini-titulo">
+        {{ dia.titulo }}
+      </div>
     </div>
+  </div>
+</div>
 
-    <div class="vpd-titulo">
-      {{ vpdTitulo }}
+  </section>
+
+  <section class="indicador-seccion">
+
+    <h3>Evapotranspiración de referencia</h3>
+
+    <div class="indicador-atmosferico et0-card">
+      <div class="indicador-valor">
+        <ng-container *ngIf="et0Actual !== null; else sinEt0">
+          {{ et0Actual | number:'1.2-2' }}
+          <small>mm/día</small>
+        </ng-container>
+
+        <ng-template #sinEt0>
+          —
+        </ng-template>
+      </div>
+
+      <div class="indicador-info">
+        <div class="indicador-titulo">
+          {{ et0Titulo }}
+        </div>
+
+        <div class="indicador-mensaje">
+          {{ et0Mensaje }}
+        </div>
+
+        <div class="indicador-datos">
+          <span>
+            Tmax:
+            {{ diaActual?.tmax | number:'1.1-1' }} °C
+          </span>
+
+          <span>
+            Tmin:
+            {{ diaActual?.tmin | number:'1.1-1' }} °C
+          </span>
+
+          <span>
+            Ra:
+            {{ radiacionExtraterrestreActual | number:'1.2-2' }}
+            MJ/m²·día
+          </span>
+        </div>
+      </div>
     </div>
-
-    <div class="vpd-mensaje">
-      {{ vpdMensaje }}
-    </div>
-
-    <div class="vpd-datos">
-      <span>
-        Temperatura:
-        {{ diaActual?.temp | number:'1.1-1' }} °C
-      </span>
-
-      <span>
-        HR:
-        {{ diaActual?.rh | number:'1.0-0' }} %
-      </span>
-    </div>
-
+<div class="indicador-pronostico">
+  <div class="indicador-pronostico-titulo">
+    Pronóstico próximos días
   </div>
 
+  <div class="indicador-pronostico-grid">
+    <div
+      *ngFor="let dia of pronosticoEt0.slice(1)"
+      class="indicador-mini"
+      [ngClass]="dia.clase"
+    >
+      <div class="indicador-mini-fecha">
+        {{ dia.fecha | date:'dd MMM' }}
+      </div>
+
+      <div class="indicador-mini-valor">
+        {{ dia.valor | number:'1.2-2' }}
+        <small>mm/día</small>
+      </div>
+
+      <div class="indicador-mini-titulo">
+        {{ dia.titulo }}
+      </div>
+    </div>
+  </div>
 </div>
-<p>
-  <strong>Punto de rocío:</strong>
-  {{ diaActual?.dewpoint | number:'1.1-1' }} °C
-</p>
-  <p>
-    <b>Helicidad relativa (0–3 km):</b>
-    {{ diaActual?.srh3000 | number:'1.0-0' }} m²/s²
-  </p>
-
-  <p>
-    <b>Reflectividad máxima:</b>
-    {{ diaActual?.refmax | number:'1.2-2' }} dBZ
-  </p>
-
-  <p>
-    <b>Granizo:</b>
-    {{ diaActual?.hail | number:'1.2-2' }}
-  </p>
-
-  <p>
-    <b>Graupel:</b>
-    {{ diaActual?.graupel | number:'1.2-2' }}
-  </p>
-
-  <hr>
-
-  <h3>🌱 Condiciones del suelo</h3>
-
-  <p>
-    <b>Humedad superficial (0–10 cm):</b>
-    {{ diaActual?.soilw010 | number:'1.2-2' }} %
-  </p>
-
-  <p>
-    <b>Humedad radicular (10–40 cm):</b>
-    {{ diaActual?.soilw1040 | number:'1.2-2' }} %
-  </p>
-
-  <p>
-    <b>Temperatura del suelo (0–10 cm):</b>
-    {{ diaActual?.tsoil010 | number:'1.2-2' }} °C
-  </p>
+  </section>
 
 </div>
 
-      
+
      
   
       

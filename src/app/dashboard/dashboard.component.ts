@@ -58,6 +58,23 @@ export class DashboardComponent implements OnInit {
   vpdClase = 'vpd-sin-datos';
   vpdTitulo = 'Datos insuficientes';
   vpdMensaje = 'No fue posible calcular el déficit de presión de vapor.';
+  et0Actual: number | null = null;
+  radiacionExtraterrestreActual: number | null = null;
+  et0Titulo = 'ET₀ no disponible';
+  et0Mensaje = 'No fue posible calcular la evapotranspiración de referencia.';
+  pronosticoVpd: Array<{
+  fecha: string;
+  valor: number | null;
+  titulo: string;
+  clase: string;
+}> = [];
+
+pronosticoEt0: Array<{
+  fecha: string;
+  valor: number | null;
+  titulo: string;
+  clase: string;
+}> = [];
   // Contiene la información exacta de cada punto mostrado en la gráfica.
   // Para consultas cortas representa un día; para consultas largas,
   // un bloque semanal o mensual.
@@ -104,8 +121,8 @@ fechaFin = new Date().toLocaleDateString('en-CA');
     padding: {
       top: 10,
       right: 10,
-      bottom: 28,
-      left: 5
+      bottom: 85,
+      left: 8
     }
   },
 
@@ -155,14 +172,14 @@ fechaFin = new Date().toLocaleDateString('en-CA');
       display: true,
       offset: false,
 
-      ticks: {
-        display: true,
-        autoSkip: true,
-        maxTicksLimit: 12,
-        maxRotation: 45,
-        minRotation: 30,
-        padding: 8
-      },
+       ticks: {
+    display: true,
+    autoSkip: true,
+    maxTicksLimit: 6,
+    maxRotation: 45,
+    minRotation: 45,
+    padding: 12
+  },
 
       grid: {
         display: true
@@ -327,6 +344,12 @@ calcularFechaMaximaGdd(): string {
         if (resp.wrf) {
           this.wrf = resp.wrf;
           this.diaActual = resp.wrf?.serie?.[0]?.variables;
+          const primerDia = resp.wrf?.serie?.[0];
+
+              this.actualizarEt0Actual(
+                primerDia?.fecha,
+                primerDia?.variables
+              );
           this.actualizarAlertaVpd(
                 this.diaActual?.temp,
                 this.diaActual?.rh
@@ -342,6 +365,9 @@ calcularFechaMaximaGdd(): string {
           if (fecha) {
             this.fechaPronostico = fecha;
           }
+          this.actualizarPronosticosAtmosfericos(
+  resp.wrf?.serie ?? []
+);
         }
 
         if (resp.humedad) {
@@ -373,6 +399,20 @@ this.actualizarGraficaHumedad(resp.humedad);
       next: (resp: any) => {
         this.wrf = resp;
         this.diaActual = resp?.serie?.[0]?.variables;
+        this.actualizarPronosticosAtmosfericos(
+  resp.wrf?.serie ?? []
+);
+        const primerDia = resp?.serie?.[0];
+
+            this.actualizarAlertaVpd(
+              primerDia?.variables?.temp,
+              primerDia?.variables?.rh
+            );
+
+            this.actualizarEt0Actual(
+              primerDia?.fecha,
+              primerDia?.variables
+            );
         this.actualizarAlertaVpd(
             this.diaActual?.temp,
             this.diaActual?.rh
@@ -637,7 +677,7 @@ this.actualizarGraficaHumedad(resp);
         padding: {
           top: 4,
           right: 8,
-          bottom: 8,
+          bottom: 10,
           left: 4
         }
       },
@@ -660,12 +700,13 @@ this.actualizarGraficaHumedad(resp);
           display: true,
           offset: true,
           ticks: {
-            display: true,
-            autoSkip: false,
-            maxRotation: 45,
-            minRotation: 30,
-            padding: 8
-          },
+                display: true,
+                autoSkip: true,
+                maxTicksLimit: 5,
+                maxRotation: 45,
+                minRotation: 45,
+                padding: 12
+              },
           grid: {
             display: true
           }
@@ -768,6 +809,151 @@ this.actualizarGraficaHumedad(resp);
 }
 
 
+private clasificarVpdValor(vpd: number | null): {
+  titulo: string;
+  clase: string;
+  mensaje: string;
+} {
+  if (vpd === null) {
+    return {
+      titulo: 'Sin datos',
+      clase: 'vpd-sin-datos',
+      mensaje: 'No fue posible calcular el VPD.'
+    };
+  }
+
+  if (vpd < 0.4) {
+    return {
+      titulo: 'Muy húmedo',
+      clase: 'vpd-muy-humedo',
+      mensaje: 'Mayor riesgo de enfermedades fúngicas.'
+    };
+  }
+
+  if (vpd < 0.8) {
+    return {
+      titulo: 'Ambiente húmedo',
+      clase: 'vpd-humedo',
+      mensaje: 'La demanda atmosférica es baja.'
+    };
+  }
+
+  if (vpd <= 1.2) {
+    return {
+      titulo: 'Rango óptimo',
+      clase: 'vpd-optimo',
+      mensaje: 'Condiciones favorables para el cultivo.'
+    };
+  }
+
+  if (vpd <= 2.0) {
+    return {
+      titulo: 'Demanda alta',
+      clase: 'vpd-seco',
+      mensaje: 'Conviene vigilar el estado hídrico.'
+    };
+  }
+
+  return {
+    titulo: 'Estrés atmosférico',
+    clase: 'vpd-estres',
+    mensaje: 'El aire está muy seco.'
+  };
+}
+
+
+private clasificarEt0Valor(et0: number | null): {
+  titulo: string;
+  clase: string;
+  mensaje: string;
+} {
+  if (et0 === null) {
+    return {
+      titulo: 'Sin datos',
+      clase: 'et0-sin-datos',
+      mensaje: 'No fue posible calcular la ET₀.'
+    };
+  }
+
+  if (et0 < 2) {
+    return {
+      titulo: 'Baja',
+      clase: 'et0-baja',
+      mensaje: 'La pérdida potencial de agua será reducida.'
+    };
+  }
+
+  if (et0 < 4) {
+    return {
+      titulo: 'Moderada',
+      clase: 'et0-moderada',
+      mensaje: 'Se espera un consumo normal de agua.'
+    };
+  }
+
+  if (et0 < 6) {
+    return {
+      titulo: 'Alta',
+      clase: 'et0-alta',
+      mensaje: 'Conviene vigilar la humedad del suelo.'
+    };
+  }
+
+  return {
+    titulo: 'Muy alta',
+    clase: 'et0-muy-alta',
+    mensaje: 'Se espera una elevada pérdida de agua.'
+  };
+}
+
+
+
+private actualizarPronosticosAtmosfericos(serie: any[]): void {
+  const dias = Array.isArray(serie)
+    ? serie.slice(0, 5)
+    : [];
+
+  this.pronosticoVpd = dias.map((dia: any) => {
+    const variables = dia?.variables ?? {};
+
+    const valor = this.calcularVpd(
+      variables.temp,
+      variables.rh
+    );
+
+    const clasificacion =
+      this.clasificarVpdValor(valor);
+
+    return {
+      fecha: dia.fecha,
+      valor,
+      titulo: clasificacion.titulo,
+      clase: clasificacion.clase
+    };
+  });
+
+  this.pronosticoEt0 = dias.map((dia: any) => {
+    const variables = dia?.variables ?? {};
+
+    const valor = this.calcularEt0Hargreaves(
+      dia.fecha,
+      variables.tmax,
+      variables.tmin,
+      variables.temp
+    );
+
+    const clasificacion =
+      this.clasificarEt0Valor(valor);
+
+    return {
+      fecha: dia.fecha,
+      valor,
+      titulo: clasificacion.titulo,
+      clase: clasificacion.clase
+    };
+  });
+}
+
 actualizarAlertaVpd(
   temperatura: unknown,
   humedadRelativa: unknown
@@ -824,6 +1010,207 @@ actualizarAlertaVpd(
   this.vpdMensaje =
     'El aire está muy seco y la planta puede cerrar sus estomas.';
 }
+
+private gradosARadianes(grados: number): number {
+  return grados * Math.PI / 180;
+}
+
+private obtenerDiaJuliano(fechaTexto: string): number | null {
+  if (!fechaTexto) {
+    return null;
+  }
+
+  const partes = fechaTexto.split('-').map(Number);
+
+  if (
+    partes.length !== 3 ||
+    partes.some(valor => !Number.isFinite(valor))
+  ) {
+    return null;
+  }
+
+  const [anio, mes, dia] = partes;
+
+  const fechaActual = Date.UTC(anio, mes - 1, dia);
+  const inicioAnio = Date.UTC(anio, 0, 0);
+
+  return Math.floor(
+    (fechaActual - inicioAnio) /
+    (1000 * 60 * 60 * 24)
+  );
+}
+
+private calcularRadiacionExtraterrestre(
+  latitudValor: unknown,
+  fechaTexto: string
+): number | null {
+  const latitud = Number(latitudValor);
+  const diaJuliano = this.obtenerDiaJuliano(fechaTexto);
+
+  if (
+    !Number.isFinite(latitud) ||
+    diaJuliano === null
+  ) {
+    return null;
+  }
+
+  const latitudRad = this.gradosARadianes(latitud);
+
+  const distanciaRelativaTierraSol =
+    1 +
+    0.033 *
+    Math.cos(
+      (2 * Math.PI / 365) *
+      diaJuliano
+    );
+
+  const declinacionSolar =
+    0.409 *
+    Math.sin(
+      (2 * Math.PI / 365) *
+      diaJuliano -
+      1.39
+    );
+
+  const argumento =
+    -Math.tan(latitudRad) *
+    Math.tan(declinacionSolar);
+
+  const argumentoLimitado =
+    Math.max(-1, Math.min(1, argumento));
+
+  const anguloHorario =
+    Math.acos(argumentoLimitado);
+
+  const constanteSolar = 0.0820;
+
+  const radiacion =
+    (24 * 60 / Math.PI) *
+    constanteSolar *
+    distanciaRelativaTierraSol *
+    (
+      anguloHorario *
+      Math.sin(latitudRad) *
+      Math.sin(declinacionSolar)
+      +
+      Math.cos(latitudRad) *
+      Math.cos(declinacionSolar) *
+      Math.sin(anguloHorario)
+    );
+
+  if (!Number.isFinite(radiacion)) {
+    return null;
+  }
+
+  return Number(
+    Math.max(0, radiacion).toFixed(2)
+  );
+}
+
+private calcularEt0Hargreaves(
+  fechaTexto: string,
+  tmaxValor: unknown,
+  tminValor: unknown,
+  temperaturaValor: unknown
+): number | null {
+  const tmax = Number(tmaxValor);
+  const tmin = Number(tminValor);
+  const temperatura = Number(temperaturaValor);
+
+  if (
+    !Number.isFinite(tmax) ||
+    !Number.isFinite(tmin) ||
+    tmax < tmin
+  ) {
+    return null;
+  }
+
+  const temperaturaMedia =
+    Number.isFinite(temperatura)
+      ? temperatura
+      : (tmax + tmin) / 2;
+
+  const radiacionExtraterrestre =
+    this.calcularRadiacionExtraterrestre(
+      this.lat,
+      fechaTexto
+    );
+
+  if (radiacionExtraterrestre === null) {
+    return null;
+  }
+
+  const diferenciaTemperatura =
+    Math.max(0, tmax - tmin);
+
+  const et0 =
+    0.0023 *
+    radiacionExtraterrestre *
+    (temperaturaMedia + 17.8) *
+    Math.sqrt(diferenciaTemperatura);
+
+  if (!Number.isFinite(et0)) {
+    return null;
+  }
+
+  return Number(
+    Math.max(0, et0).toFixed(2)
+  );
+}
+
+private actualizarEt0Actual(
+  fechaTexto: string,
+  variables: any
+): void {
+  this.radiacionExtraterrestreActual =
+    this.calcularRadiacionExtraterrestre(
+      this.lat,
+      fechaTexto
+    );
+
+  this.et0Actual =
+    this.calcularEt0Hargreaves(
+      fechaTexto,
+      variables?.tmax,
+      variables?.tmin,
+      variables?.temp
+    );
+
+  if (this.et0Actual === null) {
+    this.et0Titulo = 'Datos insuficientes';
+    this.et0Mensaje =
+      'No fue posible estimar la demanda evaporativa para esta fecha.';
+    return;
+  }
+
+  if (this.et0Actual < 2) {
+    this.et0Titulo = 'Demanda evaporativa baja';
+    this.et0Mensaje =
+      'La pérdida potencial de agua será reducida.';
+    return;
+  }
+
+  if (this.et0Actual < 4) {
+    this.et0Titulo = 'Demanda evaporativa moderada';
+    this.et0Mensaje =
+      'Se espera un consumo normal de agua por el cultivo.';
+    return;
+  }
+
+  if (this.et0Actual < 6) {
+    this.et0Titulo = 'Demanda evaporativa alta';
+    this.et0Mensaje =
+      'Conviene vigilar la disponibilidad de humedad en el suelo.';
+    return;
+  }
+
+  this.et0Titulo = 'Demanda evaporativa muy alta';
+  this.et0Mensaje =
+    'Se espera una elevada pérdida de agua; revise la humedad disponible en el suelo.';
+}
+
+
+
 
   obtenerVelocidadViento(u: number, v: number): number {
   return Math.sqrt(u * u + v * v);
