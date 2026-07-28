@@ -59,9 +59,21 @@ export class DashboardComponent implements OnInit {
   vpdTitulo = 'Datos insuficientes';
   vpdMensaje = 'No fue posible calcular el déficit de presión de vapor.';
   et0Actual: number | null = null;
+  et0HargreavesActual: number | null = null;
+  aporteAerodinamicoActual: number | null = null;
+  viento2mActual: number | null = null;
   radiacionExtraterrestreActual: number | null = null;
   et0Titulo = 'ET₀ no disponible';
   et0Mensaje = 'No fue posible calcular la evapotranspiración de referencia.';
+
+  /*
+   * CAMBIO RÁPIDO DEL MÉTODO MOSTRADO
+   * true  = Hargreaves + aporte aerodinámico experimental
+   * false = Hargreaves–Samani original
+   *
+   * Para regresar a mostrar solamente Hargreaves, cambia true por false.
+   */
+  private readonly USAR_ET0_AJUSTADA_EXPERIMENTAL = true;
   pronosticoVpd: Array<{
   fecha: string;
   valor: number | null;
@@ -935,12 +947,12 @@ private actualizarPronosticosAtmosfericos(serie: any[]): void {
   this.pronosticoEt0 = dias.map((dia: any) => {
     const variables = dia?.variables ?? {};
 
-    const valor = this.calcularEt0Hargreaves(
+    const resultadoEt0 = this.calcularEt0Mostrada(
       dia.fecha,
-      variables.tmax,
-      variables.tmin,
-      variables.temp
+      variables
     );
+
+    const valor = resultadoEt0.valor;
 
     const clasificacion =
       this.clasificarEt0Valor(valor);
@@ -1107,6 +1119,219 @@ private calcularRadiacionExtraterrestre(
   );
 }
 
+private calcularVelocidadViento10m(
+  uValor: unknown,
+  vValor: unknown
+): number | null {
+  const u = Number(uValor);
+  const v = Number(vValor);
+
+  if (!Number.isFinite(u) || !Number.isFinite(v)) {
+    return null;
+  }
+
+  return Number(Math.sqrt((u * u) + (v * v)).toFixed(3));
+}
+
+private convertirViento10mA2m(
+  viento10m: number | null
+): number | null {
+  if (viento10m === null || !Number.isFinite(viento10m)) {
+    return null;
+  }
+
+  const alturaMedicion = 10;
+
+  const viento2m =
+    viento10m *
+    (
+      4.87 /
+      Math.log((67.8 * alturaMedicion) - 5.42)
+    );
+
+  return Number(Math.max(0, viento2m).toFixed(3));
+}
+
+private calcularPendientePresionVapor(
+  temperaturaValor: unknown
+): number | null {
+  const temperatura = Number(temperaturaValor);
+
+  if (!Number.isFinite(temperatura)) {
+    return null;
+  }
+
+  const presionSaturacion =
+    0.6108 *
+    Math.exp(
+      (17.27 * temperatura) /
+      (temperatura + 237.3)
+    );
+
+  const delta =
+    (4098 * presionSaturacion) /
+    Math.pow(temperatura + 237.3, 2);
+
+  return Number(delta.toFixed(6));
+}
+
+/*
+ * APORTE AERODINÁMICO EXPERIMENTAL
+ *
+ * Convierte el efecto conjunto VPD × viento a una contribución en mm/día
+ * usando el término aerodinámico diario de FAO-56.
+ *
+ * IMPORTANTE:
+ * - Este resultado es solamente el término aerodinámico.
+ * - Al sumarlo a Hargreaves se obtiene una ET0 ajustada experimental.
+ * - No debe llamarse Penman–Monteith FAO-56.
+ */
+private calcularAporteAerodinamicoExperimental(
+  temperaturaValor: unknown,
+  humedadRelativaValor: unknown,
+  uValor: unknown,
+  vValor: unknown
+): {
+  aporteMmDia: number | null;
+  vpd: number | null;
+  viento2m: number | null;
+} {
+  const temperatura = Number(temperaturaValor);
+
+  const vpd = this.calcularVpd(
+    temperaturaValor,
+    humedadRelativaValor
+  );
+
+  const viento10m = this.calcularVelocidadViento10m(
+    uValor,
+    vValor
+  );
+
+  const viento2m = this.convertirViento10mA2m(
+    viento10m
+  );
+
+  const delta = this.calcularPendientePresionVapor(
+    temperaturaValor
+  );
+
+  if (
+    !Number.isFinite(temperatura) ||
+    vpd === null ||
+    viento2m === null ||
+    delta === null
+  ) {
+    return {
+      aporteMmDia: null,
+      vpd,
+      viento2m
+    };
+  }
+
+  /*
+   * Se usa gamma estándar aproximada a nivel del mar.
+   * Cuando el sistema disponga de presión o altitud,
+   * conviene calcular gamma específicamente para cada punto.
+   */
+  const gamma = 0.066;
+
+  const numerador =
+    gamma *
+    (900 / (temperatura + 273)) *
+    viento2m *
+    vpd;
+
+  const denominador =
+    delta +
+    gamma * (1 + (0.34 * viento2m));
+
+  if (
+    !Number.isFinite(numerador) ||
+    !Number.isFinite(denominador) ||
+    denominador <= 0
+  ) {
+    return {
+      aporteMmDia: null,
+      vpd,
+      viento2m
+    };
+  }
+
+  const aporteMmDia = numerador / denominador;
+
+  return {
+    aporteMmDia: Number(Math.max(0, aporteMmDia).toFixed(2)),
+    vpd,
+    viento2m
+  };
+}
+
+/*
+ * FUNCIÓN ÚNICA PARA ELEGIR EL VALOR QUE SE MOSTRARÁ.
+ *
+ * Para volver a Hargreaves puro no cambies esta función:
+ * solo pon USAR_ET0_AJUSTADA_EXPERIMENTAL = false.
+ */
+private calcularEt0Mostrada(
+  fechaTexto: string,
+  variables: any
+): {
+  valor: number | null;
+  hargreaves: number | null;
+  aporteAerodinamico: number | null;
+  viento2m: number | null;
+} {
+  const hargreaves = this.calcularEt0Hargreaves(
+    fechaTexto,
+    variables?.tmax,
+    variables?.tmin,
+    variables?.temp
+  );
+
+  const resultadoAerodinamico =
+    this.calcularAporteAerodinamicoExperimental(
+      variables?.temp,
+      variables?.rh,
+      variables?.u,
+      variables?.v
+    );
+
+  if (hargreaves === null) {
+    return {
+      valor: null,
+      hargreaves: null,
+      aporteAerodinamico:
+        resultadoAerodinamico.aporteMmDia,
+      viento2m:
+        resultadoAerodinamico.viento2m
+    };
+  }
+
+  if (!this.USAR_ET0_AJUSTADA_EXPERIMENTAL) {
+    return {
+      valor: hargreaves,
+      hargreaves,
+      aporteAerodinamico:
+        resultadoAerodinamico.aporteMmDia,
+      viento2m:
+        resultadoAerodinamico.viento2m
+    };
+  }
+
+  const aporte =
+    resultadoAerodinamico.aporteMmDia ?? 0;
+
+  return {
+    valor: Number((hargreaves + aporte).toFixed(2)),
+    hargreaves,
+    aporteAerodinamico:
+      resultadoAerodinamico.aporteMmDia,
+    viento2m:
+      resultadoAerodinamico.viento2m
+  };
+}
+
 private calcularEt0Hargreaves(
   fechaTexto: string,
   tmaxValor: unknown,
@@ -1145,7 +1370,7 @@ private calcularEt0Hargreaves(
 
   const et0 =
     0.0023 *
-    radiacionExtraterrestre *
+    (radiacionExtraterrestre * 0.408) *
     (temperaturaMedia + 17.8) *
     Math.sqrt(diferenciaTemperatura);
 
@@ -1168,13 +1393,16 @@ private actualizarEt0Actual(
       fechaTexto
     );
 
-  this.et0Actual =
-    this.calcularEt0Hargreaves(
-      fechaTexto,
-      variables?.tmax,
-      variables?.tmin,
-      variables?.temp
-    );
+  const resultadoEt0 = this.calcularEt0Mostrada(
+    fechaTexto,
+    variables
+  );
+
+  this.et0Actual = resultadoEt0.valor;
+  this.et0HargreavesActual = resultadoEt0.hargreaves;
+  this.aporteAerodinamicoActual =
+    resultadoEt0.aporteAerodinamico;
+  this.viento2mActual = resultadoEt0.viento2m;
 
   if (this.et0Actual === null) {
     this.et0Titulo = 'Datos insuficientes';
@@ -1185,30 +1413,27 @@ private actualizarEt0Actual(
 
   if (this.et0Actual < 2) {
     this.et0Titulo = 'Demanda evaporativa baja';
-    this.et0Mensaje =
-      'La pérdida potencial de agua será reducida.';
-    return;
-  }
-
-  if (this.et0Actual < 4) {
+  } else if (this.et0Actual < 4) {
     this.et0Titulo = 'Demanda evaporativa moderada';
-    this.et0Mensaje =
-      'Se espera un consumo normal de agua por el cultivo.';
-    return;
-  }
-
-  if (this.et0Actual < 6) {
+  } else if (this.et0Actual < 6) {
     this.et0Titulo = 'Demanda evaporativa alta';
-    this.et0Mensaje =
-      'Conviene vigilar la disponibilidad de humedad en el suelo.';
-    return;
+  } else {
+    this.et0Titulo = 'Demanda evaporativa muy alta';
   }
 
-  this.et0Titulo = 'Demanda evaporativa muy alta';
-  this.et0Mensaje =
-    'Se espera una elevada pérdida de agua; revise la humedad disponible en el suelo.';
+  /*
+   * El mensaje permite identificar fácilmente qué método está activo.
+   * Para regresar a Hargreaves puro:
+   * USAR_ET0_AJUSTADA_EXPERIMENTAL = false
+   */
+  if (this.USAR_ET0_AJUSTADA_EXPERIMENTAL) {
+    this.et0Mensaje =
+      'Hargreaves–Samani más aporte aerodinámico experimental.';
+  } else {
+    this.et0Mensaje =
+      'Estimación mediante Hargreaves–Samani.';
+  }
 }
-
 
 
 
