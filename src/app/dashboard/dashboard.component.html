@@ -83,22 +83,27 @@
         <h3>Humedad de suelo</h3>
 
         <div class="humidity-controls">
-          <select
-            [(ngModel)]="profundidad"
-            (change)="cargarHumedad()"
-          >
-            <option value="0_10">Umbrales de 0-10 cm</option>
-            <option value="10_40">Umbrales de 10-40 cm</option>
-            <option value="40_100">Umbrales de 40-100 cm</option>
-            <option value="100_200">Umbrales de 100-200 cm</option>
-          </select>
-
+          <p>Selecciona una opción para Humedad del suelo:</p>
+        <br/>
          <select
-  [(ngModel)]="variableHumedad"
-  (change)="cambiarVariableHumedad()"
+  [(ngModel)]="profundidad"
+  (change)="cambiarProfundidad()"
 >
-  <option value="soilw010">soilw010</option>
-  <option value="soilw1040">soilw1040</option>
+  <option value="0_10">
+    Humedad de suelo 0-10 cm
+  </option>
+
+  <option value="10_40">
+    Humedad de suelo 10-40 cm
+  </option>
+
+  <option value="40_100">
+    Humedad de suelo 40-100 cm
+  </option>
+
+  <option value="100_200">
+    Humedad de suelo 100-200 cm
+  </option>
 </select>
         </div>
 
@@ -243,7 +248,23 @@
 
   <section class="indicador-seccion">
 
-    <h3>Evapotranspiración potencial</h3>
+   <div class="titulo-con-ayuda">
+  <h3>Evapotranspiración Potencial (ETP)</h3>
+
+  <span
+    class="icono-ayuda"
+    tabindex="0"
+    aria-label="Información sobre la evapotranspiración potencial"
+  >
+    i
+
+    <span class="tooltip-ayuda">
+      La Evapotranspiración Potencial (ETP) mide la máxima cantidad de agua
+      que evapora desde el suelo y transpiraría desde una cobertura vegetal
+      de referencia si no hubiera limitaciones de agua.
+    </span>
+  </span>
+</div>
 
     <div class="indicador-atmosferico et0-card">
       <div class="indicador-valor">

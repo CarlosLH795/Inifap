@@ -746,7 +746,7 @@ this.actualizarGraficaHumedad(resp);
       datasets: [
         {
           type: 'bar',
-          label: this.variableHumedad,
+          label: this.obtenerNombreVariableHumedad(),
           data: humedadValores,
           order: 3,
           backgroundColor: '#96caf5',
@@ -1555,14 +1555,38 @@ obtenerDireccionViento(u: number, v: number): string {
   }
 
   cambiarProfundidad(): void {
-    this.errorCarga = '';
-    this.cargarHumedad();
-  }
+  this.errorCarga = '';
 
-  cambiarVariableHumedad(): void {
-    this.errorCarga = '';
-    this.cargarHumedad();
-  }
+  /*
+   * Cada profundidad seleccionada utiliza automáticamente
+   * la variable WRF equivalente.
+   */
+  const variablePorProfundidad: Record<string, string> = {
+    '0_10': 'soilw010',
+    '10_40': 'soilw1040',
+    '40_100': 'soilw40100',
+    '100_200': 'soilw100200'
+  };
+
+  this.variableHumedad =
+    variablePorProfundidad[this.profundidad]
+    ?? 'soilw010';
+
+  this.cargarHumedad();
+}
+
+private obtenerNombreVariableHumedad(): string {
+  const nombres: Record<string, string> = {
+    soilw010: 'Humedad WRF 0-10 cm',
+    soilw1040: 'Humedad WRF 10-40 cm',
+    soilw40100: 'Humedad WRF 40-100 cm',
+    soilw100200: 'Humedad WRF 100-200 cm'
+  };
+
+  return nombres[this.variableHumedad]
+    ?? this.variableHumedad;
+}
+
 
   private getEstadoHumedad(): string {
     const estado = this.humedad?.estado;
