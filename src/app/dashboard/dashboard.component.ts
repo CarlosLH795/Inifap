@@ -42,8 +42,16 @@ export class DashboardComponent implements OnInit {
   fechaMaximaGdd = this.calcularFechaMaximaGdd();
   wrf: any;
   diaActual: any;
+  usoSuelo: {
+  clave: string | null;
+  descripcion: string;
+  grupo: string;
+  area_ha?: number | null;
+  fuente?: string;
+} | null = null;
   historico: any;
   humedad: any;
+  et0Metodo = '';
   cultivoGdd: 'maiz' | 'frijol' | 'sorgo' = 'frijol';
   aud = 0;
   audTitulo = '';
@@ -355,6 +363,7 @@ calcularFechaMaximaGdd(): string {
 
         if (resp.wrf) {
           this.wrf = resp.wrf;
+          this.usoSuelo = resp.wrf?.uso_suelo ?? null;
           this.diaActual = resp.wrf?.serie?.[0]?.variables;
           const primerDia = resp.wrf?.serie?.[0];
 
@@ -378,8 +387,8 @@ calcularFechaMaximaGdd(): string {
             this.fechaPronostico = fecha;
           }
           this.actualizarPronosticosAtmosfericos(
-  resp.wrf?.serie ?? []
-);
+            resp.wrf?.serie ?? []
+          );
         }
 
         if (resp.humedad) {
@@ -410,10 +419,11 @@ this.actualizarGraficaHumedad(resp.humedad);
     this.agroApi.getWrfVigente(this.lat, this.lon).subscribe({
       next: (resp: any) => {
         this.wrf = resp;
+        this.usoSuelo = resp?.uso_suelo ?? null;
         this.diaActual = resp?.serie?.[0]?.variables;
         this.actualizarPronosticosAtmosfericos(
-  resp.wrf?.serie ?? []
-);
+          resp?.serie ?? []
+        );
         const primerDia = resp?.serie?.[0];
 
             this.actualizarAlertaVpd(
@@ -874,7 +884,374 @@ private clasificarVpdValor(vpd: number | null): {
 }
 
 
-private clasificarEt0Valor(et0: number | null): {
+private obtenerContextoEtpPorDescripcion(
+  etp: number
+): string {
+  const descripcion =
+    this.usoSuelo?.descripcion
+      ?.trim()
+      .toUpperCase()
+    ?? '';
+
+  if (!descripcion) {
+    return '';
+  }
+
+  const esBaja = etp < 2;
+  const esModerada = etp >= 2 && etp <= 5;
+  const esAlta = etp > 5 && etp <= 8;
+
+  // =====================================================
+  // AGRICULTURA DE TEMPORAL
+  // =====================================================
+  if (descripcion.includes('TEMPORAL')) {
+    if (esBaja) {
+      return (
+        'En agricultura de temporal, la baja demanda atmosférica ayuda a ' +
+        'conservar por más tiempo la humedad almacenada por las lluvias.'
+      );
+    }
+
+    if (esModerada) {
+      return (
+        'En agricultura de temporal, la disponibilidad de agua depende de la ' +
+        'lluvia reciente y de la humedad almacenada en el suelo.'
+      );
+    }
+
+    if (esAlta) {
+      return (
+        'En agricultura de temporal, si no ocurren lluvias en los próximos días, ' +
+        'el agua útil del suelo puede disminuir rápidamente.'
+      );
+    }
+
+    return (
+      'En agricultura de temporal, esta demanda extrema puede provocar estrés ' +
+      'hídrico y marchitez rápida si no se presentan lluvias.'
+    );
+  }
+
+  // =====================================================
+  // AGRICULTURA DE RIEGO
+  // =====================================================
+  if (descripcion.includes('RIEGO')) {
+    if (esBaja) {
+      return (
+        'En agricultura de riego, conviene evitar aplicaciones excesivas para ' +
+        'reducir el riesgo de saturación o encharcamiento.'
+      );
+    }
+
+    if (esModerada) {
+      return (
+        'En agricultura de riego, la lámina y frecuencia deben ajustarse con la ' +
+        'humedad del suelo y la etapa fenológica del cultivo.'
+      );
+    }
+
+    if (esAlta) {
+      return (
+        'En agricultura de riego, puede ser necesario aumentar la frecuencia de ' +
+        'riego según el agua útil disponible y la etapa del cultivo.'
+      );
+    }
+
+    return (
+      'En agricultura de riego, la demanda extrema requiere vigilancia continua ' +
+      'de la humedad del suelo para evitar pérdidas de rendimiento.'
+    );
+  }
+
+  // =====================================================
+  // AGRICULTURA DE HUMEDAD
+  // =====================================================
+  if (
+    descripcion.includes('AGRICULTURA DE HUMEDAD') ||
+    descripcion.includes('HUMEDAD ANUAL') ||
+    descripcion.includes('HUMEDAD PERMANENTE') ||
+    descripcion.includes('HUMEDAD SEMIPERMANENTE')
+  ) {
+    if (esBaja) {
+      return (
+        'En agricultura de humedad, la demanda reducida favorece la permanencia ' +
+        'del agua en el perfil, aunque debe vigilarse el exceso de humedad.'
+      );
+    }
+
+    if (esModerada) {
+      return (
+        'En agricultura de humedad, la condición es compatible con una pérdida ' +
+        'gradual de agua mientras exista suficiente reserva en el suelo.'
+      );
+    }
+
+    if (esAlta) {
+      return (
+        'En agricultura de humedad, una demanda alta puede reducir con rapidez ' +
+        'las reservas superficiales y aumentar el estrés del cultivo.'
+      );
+    }
+
+    return (
+      'En agricultura de humedad, la demanda extrema puede agotar rápidamente ' +
+      'las reservas disponibles y afectar el desarrollo del cultivo.'
+    );
+  }
+
+  // =====================================================
+  // PASTIZALES
+  // =====================================================
+  if (
+    descripcion.includes('PASTIZAL') ||
+    descripcion.includes('PRADERA')
+  ) {
+    if (etp < 4) {
+      return (
+        'En pastizales, la humedad superficial puede conservarse por más tiempo, ' +
+        'favoreciendo el crecimiento y la calidad del forraje.'
+      );
+    }
+
+    if (etp <= 8) {
+      return (
+        'En pastizales, la humedad de los primeros centímetros puede agotarse ' +
+        'rápidamente, reduciendo el crecimiento y la calidad del forraje.'
+      );
+    }
+
+    return (
+      'En pastizales, existe riesgo severo de desecación, pérdida de forraje y ' +
+      'mayor exposición del suelo a procesos de erosión.'
+    );
+  }
+
+  // =====================================================
+  // BOSQUES
+  // =====================================================
+  if (
+    descripcion.includes('BOSQUE') ||
+    descripcion.includes('PINO') ||
+    descripcion.includes('ENCINO') ||
+    descripcion.includes('OYAMEL') ||
+    descripcion.includes('CEDRO') ||
+    descripcion.includes('TÁSCATE') ||
+    descripcion.includes('TASCATE')
+  ) {
+    const tipoBosque =
+      descripcion.includes('PINO')
+        ? 'bosque de pino'
+        : descripcion.includes('ENCINO')
+          ? 'bosque de encino'
+          : descripcion.includes('OYAMEL')
+            ? 'bosque de oyamel'
+            : 'bosque';
+
+    if (esBaja) {
+      return (
+        `En ${tipoBosque}, la demanda baja favorece la conservación de humedad, ` +
+        'la infiltración y la recarga del suelo.'
+      );
+    }
+
+    if (esModerada) {
+      return (
+        `En ${tipoBosque}, la vegetación puede mantener una transpiración normal ` +
+        'si existe suficiente agua en el perfil del suelo.'
+      );
+    }
+
+    if (esAlta) {
+      return (
+        `En ${tipoBosque}, una demanda elevada y sostenida puede incrementar el ` +
+        'estrés hídrico y el secado del combustible vegetal.'
+      );
+    }
+
+    return (
+      `En ${tipoBosque}, la presión hídrica extrema puede agotar reservas profundas ` +
+      'y aumentar el riesgo de estrés severo e incendios.'
+    );
+  }
+
+  // =====================================================
+  // SELVAS
+  // =====================================================
+  if (descripcion.includes('SELVA')) {
+    if (esBaja) {
+      return (
+        'En selvas, la demanda baja favorece la conservación de humedad y el ' +
+        'funcionamiento normal de la vegetación.'
+      );
+    }
+
+    if (esModerada) {
+      return (
+        'En selvas, la vegetación puede mantener una alta actividad fisiológica ' +
+        'mientras exista suficiente humedad en el suelo.'
+      );
+    }
+
+    if (esAlta) {
+      return (
+        'En selvas, una demanda alta incrementa la transpiración y puede iniciar ' +
+        'estrés hídrico si disminuye la humedad del suelo.'
+      );
+    }
+
+    return (
+      'En selvas, una demanda extrema puede ocasionar estrés fisiológico severo ' +
+      'si las reservas de agua del suelo son insuficientes.'
+    );
+  }
+
+  // =====================================================
+  // ZONAS COSTERAS
+  // =====================================================
+  if (
+    descripcion.includes('MANGLAR') ||
+    descripcion.includes('DUNA') ||
+    descripcion.includes('HALÓFILA') ||
+    descripcion.includes('HALOFILA') ||
+    descripcion.includes('COSTERA')
+  ) {
+    if (etp < 2.5) {
+      return (
+        'En zonas costeras, la humedad marina mantiene una demanda atmosférica ' +
+        'reducida y ayuda a limitar las pérdidas de agua.'
+      );
+    }
+
+    if (etp <= 4.5) {
+      return (
+        'En zonas costeras, la humedad relativa y la brisa marina amortiguan ' +
+        'la evaporación potencial.'
+      );
+    }
+
+    if (etp <= 6) {
+      return (
+        'En zonas costeras, la demanda está por encima del rango habitual y ' +
+        'conviene vigilar la humedad del suelo y la vegetación.'
+      );
+    }
+
+    return (
+      'En zonas costeras, esta demanda alta puede estar asociada con vientos ' +
+      'continentales cálidos y secos que elevan rápidamente el estrés vegetal.'
+    );
+  }
+
+  // =====================================================
+  // MATORRALES Y MEZQUITALES
+  // =====================================================
+  if (
+    descripcion.includes('MATORRAL') ||
+    descripcion.includes('MEZQUITAL') ||
+    descripcion.includes('CHAPARRAL')
+  ) {
+    if (esBaja) {
+      return (
+        'En matorrales y mezquitales, la demanda baja permite conservar por más ' +
+        'tiempo la humedad disponible en el suelo.'
+      );
+    }
+
+    if (esModerada) {
+      return (
+        'La vegetación xerófila suele tolerar esta demanda, siempre que exista ' +
+        'humedad suficiente en el perfil del suelo.'
+      );
+    }
+
+    if (esAlta) {
+      return (
+        'Aunque la vegetación está adaptada a condiciones secas, una demanda alta ' +
+        'acelera el secado superficial y aumenta el estrés hídrico.'
+      );
+    }
+
+    return (
+      'La demanda extrema puede provocar desecación intensa del suelo y aumentar ' +
+      'el riesgo de pérdida de cobertura vegetal.'
+    );
+  }
+
+  // =====================================================
+  // CUERPOS DE AGUA Y ACUICULTURA
+  // =====================================================
+  if (
+    descripcion.includes('CUERPO DE AGUA') ||
+    descripcion.includes('ACUÍCOLA') ||
+    descripcion.includes('ACUICOLA') ||
+    descripcion.includes('LAGUNA') ||
+    descripcion.includes('PRESA')
+  ) {
+    return (
+      etp > 5
+        ? 'En superficies acuáticas, una ETP elevada favorece mayores pérdidas por evaporación.'
+        : 'En superficies acuáticas, la ETP representa la demanda atmosférica y no el consumo directo del cuerpo de agua.'
+    );
+  }
+
+  // =====================================================
+  // ZONAS URBANAS
+  // =====================================================
+  if (
+    descripcion.includes('ASENTAMIENTO') ||
+    descripcion.includes('URBANO')
+  ) {
+    return (
+      'En zonas urbanas, la ETP representa la demanda atmosférica de referencia; ' +
+      'el efecto real depende de la cobertura vegetal y las superficies impermeables.'
+    );
+  }
+
+  // =====================================================
+  // SIN VEGETACIÓN
+  // =====================================================
+  if (
+    descripcion.includes('SIN VEGETACIÓN') ||
+    descripcion.includes('SIN VEGETACION') ||
+    descripcion.includes('DESPROVISTO')
+  ) {
+    return (
+      etp > 5
+        ? 'En superficies sin vegetación, la demanda elevada acelera la desecación del suelo y puede favorecer procesos de erosión.'
+        : 'En superficies sin vegetación, la ETP describe principalmente la pérdida potencial de humedad desde el suelo expuesto.'
+    );
+  }
+
+  return '';
+}
+
+private agregarContextoEtp(
+  clasificacion: {
+    titulo: string;
+    clase: string;
+    mensaje: string;
+  },
+  etp: number
+): {
+  titulo: string;
+  clase: string;
+  mensaje: string;
+} {
+  const contexto = this.obtenerContextoEtpPorDescripcion(etp);
+
+  if (!contexto) {
+    return clasificacion;
+  }
+
+  return {
+    ...clasificacion,
+    mensaje: `${clasificacion.mensaje} ${contexto}`
+  };
+}
+
+private clasificarEt0Valor(
+  et0: number | null
+): {
   titulo: string;
   clase: string;
   mensaje: string;
@@ -883,39 +1260,229 @@ private clasificarEt0Valor(et0: number | null): {
     return {
       titulo: 'Sin datos',
       clase: 'et0-sin-datos',
-      mensaje: 'No fue posible calcular la ET₀.'
+      mensaje:
+        'No fue posible calcular la evapotranspiración potencial.'
     };
   }
+
+  const grupo =
+    this.usoSuelo?.grupo
+      ?.trim()
+      .toLowerCase()
+    ?? 'otro';
+
+  switch (grupo) {
+    // =====================================================
+    // CULTIVOS AGRÍCOLAS
+    // =====================================================
+    case 'agricultura':
+      if (et0 < 2) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP baja',
+          clase: 'et0-baja',
+          mensaje:
+            'El consumo potencial de agua es mínimo.'
+        }, et0);
+      }
+
+      if (et0 <= 5) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP moderada',
+          clase: 'et0-moderada',
+          mensaje:
+            'La demanda atmosférica se encuentra en un rango favorable para muchos cultivos.'
+        }, et0);
+      }
+
+      if (et0 <= 8) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP alta',
+          clase: 'et0-alta',
+          mensaje:
+            'La demanda de agua es elevada.'
+        }, et0);
+      }
+
+      return this.agregarContextoEtp({
+        titulo: 'ETP extrema',
+        clase: 'et0-muy-alta',
+        mensaje:
+          'La demanda atmosférica es extrema y puede causar marchitez rápida.'
+      }, et0);
+
+    // =====================================================
+    // PASTIZALES
+    // =====================================================
+    case 'pastizal':
+      if (et0 < 4) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP baja a moderada',
+          clase: 'et0-moderada',
+          mensaje:
+            'La pérdida potencial de agua se mantiene en un rango relativamente favorable.'
+        }, et0);
+      }
+
+      if (et0 <= 5) {
+        return this.agregarContextoEtp({
+          titulo: 'Transición a demanda alta',
+          clase: 'et0-alta',
+          mensaje:
+            'La demanda atmosférica comienza a reducir la humedad superficial.'
+        }, et0);
+      }
+
+      if (et0 <= 8) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP alta',
+          clase: 'et0-alta',
+          mensaje:
+            'La pérdida potencial de agua es elevada.'
+        }, et0);
+      }
+
+      return this.agregarContextoEtp({
+        titulo: 'ETP extrema',
+        clase: 'et0-muy-alta',
+        mensaje:
+          'La demanda atmosférica es extrema.'
+      }, et0);
+
+    // =====================================================
+    // BOSQUES Y SELVAS
+    // =====================================================
+    case 'bosque':
+    case 'selva':
+      if (et0 < 2) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP baja',
+          clase: 'et0-baja',
+          mensaje:
+            'La demanda atmosférica es reducida.'
+        }, et0);
+      }
+
+      if (et0 <= 5) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP moderada',
+          clase: 'et0-moderada',
+          mensaje:
+            'La demanda atmosférica permite una actividad vegetal normal.'
+        }, et0);
+      }
+
+      if (et0 <= 8) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP alta',
+          clase: 'et0-alta',
+          mensaje:
+            'La demanda atmosférica es elevada.'
+        }, et0);
+      }
+
+      return this.agregarContextoEtp({
+        titulo: 'ETP extrema',
+        clase: 'et0-muy-alta',
+        mensaje:
+          'La presión hídrica es extrema.'
+      }, et0);
+
+    // =====================================================
+    // ZONAS COSTERAS
+    // =====================================================
+    case 'costero':
+      if (et0 < 2.5) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP costera baja',
+          clase: 'et0-baja',
+          mensaje:
+            'La demanda atmosférica es reducida para una zona costera.'
+        }, et0);
+      }
+
+      if (et0 <= 4.5) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP costera moderada',
+          clase: 'et0-moderada',
+          mensaje:
+            'La demanda se encuentra dentro del rango costero habitual.'
+        }, et0);
+      }
+
+      if (et0 <= 6) {
+        return this.agregarContextoEtp({
+          titulo: 'ETP costera elevada',
+          clase: 'et0-alta',
+          mensaje:
+            'La demanda supera el rango costero habitual.'
+        }, et0);
+      }
+
+      return this.agregarContextoEtp({
+        titulo: 'ETP costera alta',
+        clase: et0 > 8 ? 'et0-muy-alta' : 'et0-alta',
+        mensaje:
+          'La demanda atmosférica es inusualmente alta para una zona costera.'
+      }, et0);
+
+    // =====================================================
+    // RESTO DE COBERTURAS
+    // =====================================================
+    default:
+      return this.clasificarEt0General(et0);
+  }
+}
+
+private clasificarEt0General(
+  et0: number,
+  contextoAdicional = ''
+): {
+  titulo: string;
+  clase: string;
+  mensaje: string;
+} {
+  let resultado: {
+    titulo: string;
+    clase: string;
+    mensaje: string;
+  };
 
   if (et0 < 2) {
-    return {
-      titulo: 'Baja',
+    resultado = {
+      titulo: 'ETP baja',
       clase: 'et0-baja',
-      mensaje: 'La pérdida potencial de agua será reducida.'
+      mensaje:
+        'La demanda atmosférica de agua es reducida.'
     };
-  }
-
-  if (et0 < 4) {
-    return {
-      titulo: 'Moderada',
+  } else if (et0 <= 5) {
+    resultado = {
+      titulo: 'ETP moderada',
       clase: 'et0-moderada',
-      mensaje: 'Se espera un consumo normal de agua.'
+      mensaje:
+        'La demanda atmosférica se encuentra en un rango moderado.'
     };
-  }
-
-  if (et0 < 6) {
-    return {
-      titulo: 'Alta',
+  } else if (et0 <= 8) {
+    resultado = {
+      titulo: 'ETP alta',
       clase: 'et0-alta',
-      mensaje: 'Conviene vigilar la humedad del suelo.'
+      mensaje:
+        'La pérdida potencial de agua es elevada.'
+    };
+  } else {
+    resultado = {
+      titulo: 'ETP extrema',
+      clase: 'et0-muy-alta',
+      mensaje:
+        'La demanda atmosférica de agua es extrema.'
     };
   }
 
-  return {
-    titulo: 'Muy alta',
-    clase: 'et0-muy-alta',
-    mensaje: 'Se espera una elevada pérdida de agua.'
-  };
+  if (contextoAdicional) {
+    resultado.mensaje =
+      `${resultado.mensaje} ${contextoAdicional}`;
+  }
+
+  return this.agregarContextoEtp(resultado, et0);
 }
 
 
@@ -1408,33 +1975,26 @@ private actualizarEt0Actual(
     this.et0Titulo = 'Datos insuficientes';
     this.et0Mensaje =
       'No fue posible estimar la demanda evaporativa para esta fecha.';
+    this.et0Metodo = '';
     return;
   }
 
-  if (this.et0Actual < 2) {
-    this.et0Titulo = 'Demanda evaporativa baja';
-  } else if (this.et0Actual < 4) {
-    this.et0Titulo = 'Demanda evaporativa moderada';
-  } else if (this.et0Actual < 6) {
-    this.et0Titulo = 'Demanda evaporativa alta';
-  } else {
-    this.et0Titulo = 'Demanda evaporativa muy alta';
-  }
+  const clasificacion =
+    this.clasificarEt0Valor(
+      this.et0Actual
+    );
 
-  /*
-   * El mensaje permite identificar fácilmente qué método está activo.
-   * Para regresar a Hargreaves puro:
-   * USAR_ET0_AJUSTADA_EXPERIMENTAL = false
-   */
-  if (this.USAR_ET0_AJUSTADA_EXPERIMENTAL) {
-    this.et0Mensaje =
-      'Hargreaves–Samani más aporte aerodinámico experimental.';
-  } else {
-    this.et0Mensaje =
-      'Estimación mediante Hargreaves–Samani.';
-  }
+  this.et0Titulo =
+    clasificacion.titulo;
+
+  this.et0Mensaje =
+    clasificacion.mensaje;
+
+  this.et0Metodo =
+    this.USAR_ET0_AJUSTADA_EXPERIMENTAL
+      ? 'Hargreaves–Samani más aporte aerodinámico experimental.'
+      : 'Estimación mediante Hargreaves–Samani.';
 }
-
 
 
   obtenerVelocidadViento(u: number, v: number): number {

@@ -18,7 +18,7 @@
 }
 
 .logo {
-  width: 38px;
+  width: 80px;
   height: 38px;
 }
 
@@ -42,4 +42,19 @@ button {
 .logout {
   background: #dc2626;
   color: white;
+}
+
+
+@media (max-width: 900px) {
+  .logo {
+  width: 60px;
+  height: 38px;
+  }
+}
+
+@media (max-width: 600px) {
+   .logo {
+  width: 50px;
+  height: 30px;
+  }
 }

@@ -45,7 +45,33 @@
       <span>Dato coordenado</span>
       <p><b>Lat:</b> {{ lat | number:'1.4-4' }}</p>
       <p><b>Lon:</b> {{ lon | number:'1.4-4' }}</p>
+      <div class="uso-suelo-coordenada">
+  <span class="uso-suelo-etiqueta">
+    Uso de suelo:
+  </span>
+
+  <strong>
+    {{
+      usoSuelo?.descripcion
+      || 'Sin clasificación disponible'
+    }}
+  </strong>
+
+  <small *ngIf="usoSuelo?.clave">
+    Conjunto de datos vectoriales de la carta de Uso del suelo y vegetación. Escala 1:250 000. Serie VI. Conjunto Nacional, INEGI - Geografia y medio ambiente - Uso de suelo y vegetación
+  </small>
+</div>
     </div>
+<br>
+     <div class="location">
+      <small>
+        Descargo de responsabilidad:
+      </small>
+      <br>
+      <small style="color: #cfd8cf;  font-size: 11px;  font-weight: 200;">
+   El presente tablero digital es una herramienta de apoyo para la interpretación de datos climáticos y edáficos, desarrollada con fines académicos, técnicos y de investigación. Los valores mostrados (humedad del suelo, déficit de presión de vapor y evapotranspiración potencial) se derivan de simulaciones numéricas realizadas con el modelo WRF y de fuentes de datos complementarias. Este tablero no constituye un pronóstico oficial del clima ni sustituye la información emitida por el Servicio Meteorológico Nacional, autoridad designada en México para la generación y difusión de pronósticos meteorológicos. Los desarrolladores y la institución responsable no asumen responsabilidad legal por el uso que los usuarios hagan de la información aquí presentada, ni por decisiones operativas, productivas o comerciales que se deriven de ella. Se recomienda a los usuarios consultar siempre las fuentes oficiales para fines de planeación y gestión.
+  </small>
+     </div>
 
   </aside>
 
@@ -80,7 +106,24 @@
 
         <div class="panel large humedad-panel">
 
-        <h3>Humedad de suelo</h3>
+        <div class="titulo-con-ayuda">
+  <h3>Humedad de suelo</h3>
+
+  <span
+    class="icono-ayuda"
+    tabindex="0"
+    aria-label="Información sobre el agua útil disponible"
+  >
+    i
+
+    <span class="tooltip-ayuda">
+      El Agua Útil Disponible (AUD) representa la proporción de humedad
+      almacenada entre el Punto de Marchitez Permanente (PMP) y la
+      Capacidad de Campo (CC). Permite estimar cuánta agua puede utilizar
+      realmente el cultivo.
+    </span>
+  </span>
+</div>
 
         <div class="humidity-controls">
           <p>Selecciona una opción para Humedad del suelo:</p>
@@ -178,7 +221,23 @@
 
   <section class="indicador-seccion">
 
-    <h3>Déficit de presión de vapor</h3>
+    <div class="titulo-con-ayuda">
+  <h3>Déficit de presión de vapor</h3>
+
+  <span
+    class="icono-ayuda"
+    tabindex="0"
+    aria-label="Información sobre el déficit de presión de vapor"
+  >
+    i
+
+    <span class="tooltip-ayuda">
+      Estima la “sed” del aire calculando la diferencia entre la humedad
+      real y la máxima cantidad de vapor que el aire puede retener a una
+      temperatura determinada.
+    </span>
+  </span>
+</div>
 
     <div
       class="indicador-atmosferico vpd-card"
