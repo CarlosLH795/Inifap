@@ -577,6 +577,261 @@ this.actualizarGraficaHumedad(resp);
     return Number(Math.max(0, resultado).toFixed(1));
   }
 
+  private obtenerContextoAudPorDescripcion(
+    aud: number
+  ): string {
+    const descripcion =
+      this.usoSuelo?.descripcion
+        ?.trim()
+        .toUpperCase()
+      ?? '';
+
+    const grupo =
+      this.usoSuelo?.grupo
+        ?.trim()
+        .toLowerCase()
+      ?? '';
+
+    if (!descripcion && !grupo) {
+      return '';
+    }
+
+    const esOptimo = aud >= 80;
+    const esConfort = aud >= 50 && aud < 80;
+    const esAgotamiento = aud >= 20 && aud < 50;
+
+    // =====================================================
+    // CULTIVOS AGRÍCOLAS
+    // =====================================================
+    if (
+      grupo === 'agricultura' ||
+      descripcion.includes('AGRICULTURA') ||
+      descripcion.includes('CULTIVO') ||
+      descripcion.includes('MAÍZ') ||
+      descripcion.includes('MAIZ') ||
+      descripcion.includes('SORGO') ||
+      descripcion.includes('TRIGO') ||
+      descripcion.includes('FRIJOL')
+    ) {
+      if (esOptimo) {
+        return (
+          'Máxima transpiración y fotosíntesis. Existe riesgo de asfixia ' +
+          'radicular únicamente si el suelo permanece saturado durante demasiado tiempo.'
+        );
+      }
+
+      if (esConfort) {
+        return (
+          'Los estomas comienzan a cerrarse parcialmente. Cultivos como maíz, ' +
+          'sorgo y trigo presentan poca afectación.'
+        );
+      }
+
+      if (esAgotamiento) {
+        return (
+          'La pérdida inmediata de rendimiento puede ocurrir durante la floración. ' +
+          'El cierre estomático detiene el crecimiento.'
+        );
+      }
+
+      return (
+        'Existe riesgo de marchitez, muerte del tejido e interrupción del ' +
+        'crecimiento si esta condición persiste.'
+      );
+    }
+
+    // =====================================================
+    // PASTIZALES
+    // =====================================================
+    if (
+      grupo === 'pastizal' ||
+      descripcion.includes('PASTIZAL') ||
+      descripcion.includes('PRADERA')
+    ) {
+      if (esOptimo) {
+        return (
+          'El pastizal presenta alto crecimiento vegetativo y acumulación de materia seca.'
+        );
+      }
+
+      if (esConfort) {
+        return (
+          'La capacidad de pastoreo se mantiene sostenida y el desarrollo de raíces es estable.'
+        );
+      }
+
+      if (esAgotamiento) {
+        return (
+          'Los pastos comienzan a amarillear y disminuye la generación de biomasa.'
+        );
+      }
+
+      return (
+        'La biomasa aérea se seca y las coronas permanecen vivas en espera de lluvia.'
+      );
+    }
+
+    // =====================================================
+    // BOSQUES Y SELVAS
+    // =====================================================
+    if (
+      grupo === 'bosque' ||
+      grupo === 'selva' ||
+      descripcion.includes('BOSQUE') ||
+      descripcion.includes('SELVA') ||
+      descripcion.includes('PINO') ||
+      descripcion.includes('ENCINO') ||
+      descripcion.includes('OYAMEL') ||
+      descripcion.includes('CEDRO')
+    ) {
+      if (esOptimo) {
+        return (
+          'Se favorece un alto flujo de savia y la recarga de agua en horizontes profundos.'
+        );
+      }
+
+      if (esConfort) {
+        return (
+          'Los árboles extraen agua de horizontes menos profundos sin presentar estrés importante.'
+        );
+      }
+
+      if (esAgotamiento) {
+        return (
+          'Los árboles caducifolios pueden perder hojas, las coníferas reducen el ' +
+          'flujo de resina y aumenta la vulnerabilidad a plagas.'
+        );
+      }
+
+      return (
+        'Se activa la extracción profunda de raíces. Aumenta el riesgo de falla ' +
+        'hidráulica, desprendimientos e incendios forestales.'
+      );
+    }
+
+    // =====================================================
+    // ZONAS COSTERAS
+    // =====================================================
+    if (
+      grupo === 'costero' ||
+      descripcion.includes('MANGLAR') ||
+      descripcion.includes('DUNA') ||
+      descripcion.includes('HALÓFILA') ||
+      descripcion.includes('HALOFILA') ||
+      descripcion.includes('COSTERA') ||
+      descripcion.includes('COSTERO')
+    ) {
+      if (esOptimo) {
+        return (
+          'La alta entrada de agua dulce ayuda a reducir la acumulación de salinidad mareal.'
+        );
+      }
+
+      if (esConfort) {
+        return (
+          'Se mantiene un balance normal entre agua dulce y salada para manglares y halófitas.'
+        );
+      }
+
+      if (esAgotamiento) {
+        return (
+          'La baja entrada de agua dulce concentra la sal. Sólo las halófitas ' +
+          'altamente especializadas permanecen activas.'
+        );
+      }
+
+      return (
+        'La costra de sal se eleva y la vegetación puede desecarse debido a la ósmosis inversa.'
+      );
+    }
+
+    return '';
+  }
+
+  private agregarContextoAud(
+    clasificacion: {
+      titulo: string;
+      clase: string;
+      mensaje: string;
+    },
+    aud: number
+  ): {
+    titulo: string;
+    clase: string;
+    mensaje: string;
+  } {
+    const contexto = this.obtenerContextoAudPorDescripcion(aud);
+
+    if (!contexto) {
+      return clasificacion;
+    }
+
+    return {
+      ...clasificacion,
+      mensaje: `${clasificacion.mensaje} ${contexto}`
+    };
+  }
+
+  private clasificarAudValor(
+    aud: number | null
+  ): {
+    titulo: string;
+    clase: string;
+    mensaje: string;
+  } {
+    if (aud === null) {
+      return {
+        titulo: 'Datos insuficientes',
+        clase: 'aud-sin-datos',
+        mensaje:
+          'No fue posible calcular el agua útil disponible para este punto.'
+      };
+    }
+
+    if (aud > 100) {
+      return {
+        titulo: 'Suelo saturado',
+        clase: 'aud-saturado',
+        mensaje:
+          'Existe riesgo de asfixia radicular si esta condición permanece.'
+      };
+    }
+
+    if (aud >= 80) {
+      return this.agregarContextoAud({
+        titulo: 'Condición óptima',
+        clase: 'aud-optimo',
+        mensaje:
+          'La disponibilidad de agua se encuentra en un nivel óptimo.'
+      }, aud);
+    }
+
+    if (aud >= 50) {
+      return this.agregarContextoAud({
+        titulo: 'Zona de confort',
+        clase: 'aud-optimo',
+        mensaje:
+          'La reserva de agua útil permite mantener la actividad de la vegetación.'
+      }, aud);
+    }
+
+    if (aud >= 20) {
+      return this.agregarContextoAud({
+        titulo: 'Agotamiento permitido',
+        clase: 'aud-riego',
+        mensaje:
+          'La disponibilidad de agua comienza a limitar el crecimiento.'
+      }, aud);
+    }
+
+    return this.agregarContextoAud({
+      titulo: 'Sequía severa',
+      clase: 'aud-estres',
+      mensaje:
+        'La reserva de agua útil es crítica y existe riesgo de marchitamiento.'
+    }, aud);
+  }
+
   private actualizarAlertaAud(
     humedad: number | null,
     pmp: number | null,
@@ -585,46 +840,12 @@ this.actualizarGraficaHumedad(resp);
     this.humedadActualAud = humedad;
 
     const audCalculado = this.calcularAud(humedad, pmp, cc);
+    const clasificacion = this.clasificarAudValor(audCalculado);
 
-    if (audCalculado === null) {
-      this.aud = 0;
-      this.audClase = 'aud-sin-datos';
-      this.audTitulo = 'Datos insuficientes';
-      this.audMensaje =
-        'No fue posible calcular el agua útil disponible para este punto.';
-      return;
-    }
-
-    this.aud = audCalculado;
-
-    if (this.aud > 100) {
-      this.audClase = 'aud-saturado';
-      this.audTitulo = 'Suelo saturado';
-      this.audMensaje =
-        'Existe riesgo de asfixia radicular si esta condición permanece.';
-      return;
-    }
-
-    if (this.aud >= 50) {
-      this.audClase = 'aud-optimo';
-      this.audTitulo = 'Zona de confort';
-      this.audMensaje =
-        'El cultivo dispone de agua útil suficiente en el suelo.';
-      return;
-    }
-
-    if (this.aud > 0) {
-      this.audClase = 'aud-riego';
-      this.audTitulo = 'Umbral de riego crítico';
-      this.audMensaje =
-        'Es necesario regar o vigilar el cultivo ante posible estrés hídrico.';
-      return;
-    }
-
-    this.audClase = 'aud-estres';
-    this.audTitulo = 'Punto de marchitez';
-    this.audMensaje =
-      'La disponibilidad de agua es prácticamente nula y existe riesgo severo para el cultivo.';
+    this.aud = audCalculado ?? 0;
+    this.audClase = clasificacion.clase;
+    this.audTitulo = clasificacion.titulo;
+    this.audMensaje = clasificacion.mensaje;
   }
 
   actualizarGraficaHumedad(resp: any): void {
