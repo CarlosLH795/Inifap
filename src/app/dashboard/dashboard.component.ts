@@ -2191,6 +2191,9 @@ private obtenerNombreVariableHumedad(): string {
     window.URL.revokeObjectURL(url);
   }
 
+  private readonly DESCARGO_RESPONSABILIDAD =
+    'El presente tablero digital es una herramienta de apoyo para la interpretación de datos climáticos y edáficos, desarrollada con fines académicos, técnicos y de investigación. Los valores mostrados se derivan de simulaciones numéricas realizadas con el modelo WRF y de fuentes de datos complementarias. Este tablero no constituye un pronóstico oficial del clima ni sustituye la información emitida por el Servicio Meteorológico Nacional. Los desarrolladores y la institución responsable no asumen responsabilidad legal por el uso de la información aquí presentada ni por decisiones operativas, productivas o comerciales derivadas de ella. Se recomienda consultar siempre las fuentes oficiales para fines de planeación y gestión.';
+
   private dibujarTextoPNG(
     ctx: CanvasRenderingContext2D,
     texto: string,
@@ -2202,6 +2205,138 @@ private obtenerNombreVariableHumedad(): string {
     ctx.font = font;
     ctx.fillStyle = color;
     ctx.fillText(texto, x, y);
+  }
+
+  private dibujarTextoEnvueltoPNG(
+    ctx: CanvasRenderingContext2D,
+    texto: string,
+    x: number,
+    y: number,
+    anchoMaximo: number,
+    altoLinea = 20,
+    font = '14px Arial',
+    color = '#263238'
+  ): number {
+    ctx.font = font;
+    ctx.fillStyle = color;
+
+    const palabras = texto.split(/\s+/);
+    let linea = '';
+    let yActual = y;
+
+    palabras.forEach((palabra, indice) => {
+      const prueba = linea ? `${linea} ${palabra}` : palabra;
+
+      if (ctx.measureText(prueba).width > anchoMaximo && linea) {
+        ctx.fillText(linea, x, yActual);
+        linea = palabra;
+        yActual += altoLinea;
+      } else {
+        linea = prueba;
+      }
+
+      if (indice === palabras.length - 1 && linea) {
+        ctx.fillText(linea, x, yActual);
+      }
+    });
+
+    return yActual + altoLinea;
+  }
+
+  private dibujarMarcaAguaPNG(
+    ctx: CanvasRenderingContext2D,
+    ancho: number,
+    alto: number
+  ): void {
+    ctx.save();
+    ctx.translate(ancho / 2, alto / 2);
+    ctx.rotate(-Math.PI / 6);
+    ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#1b5e20';
+    ctx.font = 'bold 86px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('@INIFAP', 0, 0);
+    ctx.restore();
+  }
+
+  private dibujarDescargoPNG(
+    ctx: CanvasRenderingContext2D,
+    yInicio: number,
+    ancho: number
+  ): number {
+    const margen = 25;
+    const anchoCaja = ancho - (margen * 2);
+
+    ctx.save();
+    ctx.fillStyle = '#f4f7f2';
+    ctx.strokeStyle = '#9fb79f';
+    ctx.lineWidth = 1;
+    ctx.fillRect(margen, yInicio, anchoCaja, 150);
+    ctx.strokeRect(margen, yInicio, anchoCaja, 150);
+
+    this.dibujarTextoPNG(
+      ctx,
+      'Descargo de responsabilidad',
+      margen + 15,
+      yInicio + 28,
+      'bold 16px Arial',
+      '#1b5e20'
+    );
+
+    const fin = this.dibujarTextoEnvueltoPNG(
+      ctx,
+      this.DESCARGO_RESPONSABILIDAD,
+      margen + 15,
+      yInicio + 55,
+      anchoCaja - 30,
+      18,
+      '13px Arial',
+      '#263238'
+    );
+
+    ctx.restore();
+    return Math.max(fin + 10, yInicio + 160);
+  }
+
+  private agregarMarcaAguaPDF(pdf: jsPDF): void {
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(42);
+    pdf.setTextColor(225, 232, 225);
+    pdf.text('@INIFAP', 148.5, 105, {
+      align: 'center',
+      angle: 32
+    });
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+  }
+
+  private agregarDescargoPDF(
+    pdf: jsPDF,
+    yInicio: number,
+    anchoPagina = 297
+  ): void {
+    const margen = 15;
+    const anchoCaja = anchoPagina - (margen * 2);
+    const lineas = pdf.splitTextToSize(
+      this.DESCARGO_RESPONSABILIDAD,
+      anchoCaja - 8
+    );
+    const altoCaja = 10 + (lineas.length * 4.2) + 8;
+
+    pdf.setFillColor(244, 247, 242);
+    pdf.setDrawColor(159, 183, 159);
+    pdf.roundedRect(margen, yInicio, anchoCaja, altoCaja, 2, 2, 'FD');
+
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(27, 94, 32);
+    pdf.text('Descargo de responsabilidad', margen + 4, yInicio + 6);
+
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(45, 55, 45);
+    pdf.text(lineas, margen + 4, yInicio + 11);
+    pdf.setTextColor(0, 0, 0);
   }
 
   descargarGraficaPNG(tipo: 'humedad' | 'gdd'): void {
@@ -2219,7 +2354,6 @@ private obtenerNombreVariableHumedad(): string {
     }
 
     const original = chart.canvas;
-
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
@@ -2227,143 +2361,160 @@ private obtenerNombreVariableHumedad(): string {
       return;
     }
 
-    const ancho = Math.max(original.width, 1100);
-    const altoInfo = tipo === 'humedad'
-      ? 360
-      : Math.min(520, 210 + ((this.historico?.serie?.length || 0) * 22));
+    const ancho = Math.max(original.width, 1200);
+    const margen = 35;
+    const anchoGrafica = ancho - (margen * 2);
+    const escala = Math.min(anchoGrafica / original.width, 1.2);
+    const altoGrafica = original.height * escala;
+    const altoEncabezado = tipo === 'humedad' ? 390 : 470;
+    const altoDescargo = 180;
 
     canvas.width = ancho;
-    canvas.height = original.height + altoInfo + 40;
+    canvas.height = altoEncabezado + altoGrafica + altoDescargo + 60;
 
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.dibujarMarcaAguaPNG(ctx, canvas.width, canvas.height);
 
-    let y = 35;
+    let y = 42;
 
     if (tipo === 'humedad') {
       const pmp = this.humedad?.referencia?.pmp;
       const cc = this.humedad?.referencia?.cc;
 
-      this.dibujarTextoPNG(ctx, 'Reporte de Humedad de Suelo', 25, y, '24px Arial');
-      y += 35;
+      this.dibujarTextoPNG(ctx, 'Reporte de Humedad de Suelo', margen, y, 'bold 26px Arial', '#173b1f');
+      y += 40;
 
-      this.dibujarTextoPNG(ctx, `Lat: ${this.lat}`, 25, y);
-      this.dibujarTextoPNG(ctx, `Lon: ${this.lon}`, 300, y);
-      y += 28;
+      this.dibujarTextoPNG(ctx, `Lat: ${this.lat}`, margen, y);
+      this.dibujarTextoPNG(ctx, `Lon: ${this.lon}`, 330, y);
+      this.dibujarTextoPNG(ctx, `Fecha pronóstico: ${this.fechaPronostico || '-'}`, 650, y);
+      y += 30;
 
-      this.dibujarTextoPNG(ctx, `Estado: ${this.getEstadoHumedad()}`, 25, y);
-      y += 28;
+      this.dibujarTextoPNG(ctx, `Estado: ${this.getEstadoHumedad()}`, margen, y);
+      this.dibujarTextoPNG(ctx, `Profundidad: ${this.profundidad}`, 330, y);
+      this.dibujarTextoPNG(ctx, `Variable: ${this.variableHumedad}`, 650, y);
+      y += 30;
 
-      this.dibujarTextoPNG(ctx, `Profundidad: ${this.profundidad}`, 25, y);
-      this.dibujarTextoPNG(ctx, `Variable: ${this.variableHumedad}`, 300, y);
-      y += 28;
-
-      this.dibujarTextoPNG(ctx, `PMP: ${this.formatoNumero(pmp, 4)} m³/m³`, 25, y);
-      this.dibujarTextoPNG(ctx, `CC: ${this.formatoNumero(cc, 4)} m³/m³`, 300, y);
+      this.dibujarTextoPNG(ctx, `PMP: ${this.formatoNumero(pmp, 4)} m³/m³`, margen, y);
+      this.dibujarTextoPNG(ctx, `CC: ${this.formatoNumero(cc, 4)} m³/m³`, 330, y);
       this.dibujarTextoPNG(
         ctx,
         `Humedad WRF: ${this.formatoNumero(this.humedadActualAud, 4)} m³/m³`,
-        520,
+        650,
         y
       );
-      y += 28;
+      y += 32;
 
       this.dibujarTextoPNG(
         ctx,
         `AUD: ${this.formatoNumero(this.aud, 1)}% - ${this.audTitulo}`,
-        25,
+        margen,
         y,
-        'bold 18px Arial',
+        'bold 19px Arial',
         '#1b5e20'
       );
-      y += 26;
+      y += 27;
 
-      this.dibujarTextoPNG(ctx, this.audMensaje, 25, y, '15px Arial');
-      y += 35;
+      y = this.dibujarTextoEnvueltoPNG(
+        ctx,
+        this.audMensaje,
+        margen,
+        y,
+        ancho - (margen * 2),
+        20,
+        '15px Arial'
+      ) + 12;
 
-      this.dibujarTextoPNG(ctx, 'Fecha', 25, y, 'bold 16px Arial');
-      this.dibujarTextoPNG(ctx, 'Humedad', 200, y, 'bold 16px Arial');
-      y += 22;
+      this.dibujarTextoPNG(ctx, 'Fecha', margen, y, 'bold 16px Arial');
+      this.dibujarTextoPNG(ctx, 'Humedad', 230, y, 'bold 16px Arial');
+      y += 24;
 
-      this.humedad?.pronostico?.forEach((d: any) => {
-        this.dibujarTextoPNG(ctx, String(d.fecha), 25, y);
+      this.humedad?.pronostico?.slice(0, 5).forEach((d: any) => {
+        this.dibujarTextoPNG(ctx, String(d.fecha), margen, y, '15px Arial');
         const humedadConvertida = this.convertirHumedadWrf(d.valor);
         this.dibujarTextoPNG(
           ctx,
           `${this.formatoNumero(humedadConvertida, 4)} m³/m³`,
-          200,
-          y
+          230,
+          y,
+          '15px Arial'
         );
         y += 22;
       });
-
     } else {
-      this.dibujarTextoPNG(ctx, 'Reporte Histórico GDD', 25, y, '24px Arial');
-      y += 35;
+      this.dibujarTextoPNG(ctx, 'Reporte Histórico GDD', margen, y, 'bold 26px Arial', '#173b1f');
+      y += 40;
 
-      this.dibujarTextoPNG(ctx, `Lat: ${this.lat}`, 25, y);
-      this.dibujarTextoPNG(ctx, `Lon: ${this.lon}`, 300, y);
-      y += 28;
+      this.dibujarTextoPNG(ctx, `Lat: ${this.lat}`, margen, y);
+      this.dibujarTextoPNG(ctx, `Lon: ${this.lon}`, 330, y);
+      y += 30;
 
-      this.dibujarTextoPNG(ctx, `Fecha inicio: ${this.fechaInicio}`, 25, y);
-      this.dibujarTextoPNG(ctx, `Fecha fin: ${this.fechaFin}`, 300, y);
-      y += 28;
+      this.dibujarTextoPNG(ctx, `Fecha inicio: ${this.fechaInicio}`, margen, y);
+      this.dibujarTextoPNG(ctx, `Fecha fin: ${this.fechaFin}`, 330, y);
+      this.dibujarTextoPNG(ctx, `Cultivo: ${this.cultivoGdd.toUpperCase()}`, 650, y);
+      y += 34;
 
       this.dibujarTextoPNG(
         ctx,
         `GDD acumulado: ${this.formatoNumero(this.gddAcumulado, 2)}`,
-        25,
+        margen,
         y,
-        'bold 18px Arial',
+        'bold 19px Arial',
         '#1b5e20'
       );
-      this.dibujarTextoPNG(
-        ctx,
-        `Cultivo: ${this.cultivoGdd.toUpperCase()}`,
-        300,
-        y
-      );
-      y += 35;
+      y += 34;
 
-      this.dibujarTextoPNG(ctx, 'Fecha', 25, y, 'bold 16px Arial');
-      this.dibujarTextoPNG(ctx, 'Tmax', 180, y, 'bold 16px Arial');
-      this.dibujarTextoPNG(ctx, 'Tmin', 300, y, 'bold 16px Arial');
-      this.dibujarTextoPNG(ctx, 'GDD', 420, y, 'bold 16px Arial');
-      y += 22;
+      this.dibujarTextoPNG(ctx, 'Fecha', margen, y, 'bold 16px Arial');
+      this.dibujarTextoPNG(ctx, 'Tmax', 230, y, 'bold 16px Arial');
+      this.dibujarTextoPNG(ctx, 'Tmin', 370, y, 'bold 16px Arial');
+      this.dibujarTextoPNG(ctx, 'GDD', 510, y, 'bold 16px Arial');
+      y += 24;
 
       const serie = this.historico?.serie || [];
-      const maxFilas = 14;
+      const maxFilas = 12;
 
       serie.slice(0, maxFilas).forEach((d: any) => {
-        this.dibujarTextoPNG(ctx, String(d.fecha), 25, y);
-        this.dibujarTextoPNG(ctx, this.formatoNumero(d.tmax, 2), 180, y);
-        this.dibujarTextoPNG(ctx, this.formatoNumero(d.tmin, 2), 300, y);
-        this.dibujarTextoPNG(ctx, this.formatoNumero(d.gdd, 2), 420, y);
+        this.dibujarTextoPNG(ctx, String(d.fecha), margen, y, '15px Arial');
+        this.dibujarTextoPNG(ctx, this.formatoNumero(d.tmax, 2), 230, y, '15px Arial');
+        this.dibujarTextoPNG(ctx, this.formatoNumero(d.tmin, 2), 370, y, '15px Arial');
+        this.dibujarTextoPNG(ctx, this.formatoNumero(d.gdd, 2), 510, y, '15px Arial');
         y += 22;
       });
 
       if (serie.length > maxFilas) {
-        this.dibujarTextoPNG(ctx, `... ${serie.length - maxFilas} registros adicionales en CSV/PDF`, 25, y);
-        y += 28;
+        this.dibujarTextoPNG(
+          ctx,
+          `... ${serie.length - maxFilas} registros adicionales disponibles en CSV y PDF`,
+          margen,
+          y,
+          '14px Arial',
+          '#546e5a'
+        );
+        y += 26;
       }
     }
 
+    const yGrafica = Math.max(y + 20, altoEncabezado);
     ctx.drawImage(
       original,
-      0,
-      y + 20,
-      original.width,
-      original.height
+      margen,
+      yGrafica,
+      anchoGrafica,
+      altoGrafica
+    );
+
+    this.dibujarDescargoPNG(
+      ctx,
+      yGrafica + altoGrafica + 25,
+      ancho
     );
 
     const link = document.createElement('a');
-
     link.href = canvas.toDataURL('image/png');
     link.download =
       tipo === 'humedad'
         ? 'humedad_suelo.png'
         : 'historico_gdd.png';
-
     link.click();
   }
 
@@ -2435,123 +2586,132 @@ private obtenerNombreVariableHumedad(): string {
       return;
     }
 
-    const img = chart.toBase64Image();
+    const img = chart.toBase64Image('image/png', 1);
     const pdf = new jsPDF('landscape', 'mm', 'a4');
+    const anchoPagina = 297;
 
-    pdf.setFontSize(16);
+    this.agregarMarcaAguaPDF(pdf);
 
     if (tipo === 'humedad') {
       const pmp = this.humedad?.referencia?.pmp;
       const cc = this.humedad?.referencia?.cc;
 
-      pdf.text('Reporte de Humedad de Suelo', 15, 15);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(17);
+      pdf.setTextColor(23, 59, 31);
+      pdf.text('Reporte de Humedad de Suelo', 15, 14);
 
-      pdf.setFontSize(10);
-      pdf.text(`Lat: ${this.lat}`, 15, 25);
-      pdf.text(`Lon: ${this.lon}`, 80, 25);
-      pdf.text(`Fecha pronóstico: ${this.fechaPronostico || '-'}`, 150, 25);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(9.5);
 
-      pdf.text(`Estado: ${this.getEstadoHumedad()}`, 15, 32);
-      pdf.text(`Profundidad: ${this.profundidad}`, 80, 32);
-      pdf.text(`Variable: ${this.variableHumedad}`, 150, 32);
+      pdf.text(`Lat: ${this.lat}`, 15, 23);
+      pdf.text(`Lon: ${this.lon}`, 78, 23);
+      pdf.text(`Fecha pronóstico: ${this.fechaPronostico || '-'}`, 145, 23);
 
-      pdf.text(`PMP: ${this.formatoNumero(pmp, 4)} m³/m³`, 15, 39);
-      pdf.text(`CC: ${this.formatoNumero(cc, 4)} m³/m³`, 80, 39);
+      pdf.text(`Estado: ${this.getEstadoHumedad()}`, 15, 30);
+      pdf.text(`Profundidad: ${this.profundidad}`, 78, 30);
+      pdf.text(`Variable: ${this.variableHumedad}`, 145, 30);
+
+      pdf.text(`PMP: ${this.formatoNumero(pmp, 4)} m³/m³`, 15, 37);
+      pdf.text(`CC: ${this.formatoNumero(cc, 4)} m³/m³`, 78, 37);
       pdf.text(
         `Humedad WRF: ${this.formatoNumero(this.humedadActualAud, 4)} m³/m³`,
-        150,
-        39
+        145,
+        37
       );
+
+      pdf.setFillColor(238, 247, 238);
+      pdf.setDrawColor(112, 170, 112);
+      pdf.roundedRect(15, 43, 267, 18, 2, 2, 'FD');
 
       pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(27, 94, 32);
       pdf.text(
         `AUD: ${this.formatoNumero(this.aud, 1)}% - ${this.audTitulo}`,
-        15,
-        47
+        20,
+        51
       );
+
       pdf.setFont('helvetica', 'normal');
-      pdf.text(this.audMensaje, 80, 47);
+      pdf.setFontSize(8.5);
+      pdf.setTextColor(35, 55, 35);
+      const audLineas = pdf.splitTextToSize(this.audMensaje, 160);
+      pdf.text(audLineas, 20, 57);
 
-      let y = 58;
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(8.5);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Fecha', 210, 49);
+      pdf.text('Humedad', 250, 49);
+      pdf.setFont('helvetica', 'normal');
 
-      pdf.setFontSize(9);
-      pdf.text('Fecha', 15, y);
-      pdf.text('Humedad', 55, y);
-
-      y += 6;
-
-      this.humedad?.pronostico?.forEach((d: any) => {
-        pdf.text(String(d.fecha), 15, y);
+      let yTabla = 54;
+      this.humedad?.pronostico?.slice(0, 5).forEach((d: any) => {
         const humedadConvertida = this.convertirHumedadWrf(d.valor);
-        pdf.text(
-          `${this.formatoNumero(humedadConvertida, 4)} m³/m³`,
-          55,
-          y
-        );
-        y += 6;
+        pdf.text(String(d.fecha), 210, yTabla);
+        pdf.text(`${this.formatoNumero(humedadConvertida, 4)}`, 250, yTabla);
+        yTabla += 5;
       });
 
-      pdf.addImage(img, 'PNG', 90, 58, 185, 110);
-
+      pdf.addImage(img, 'PNG', 20, 68, 257, 92);
+      this.agregarDescargoPDF(pdf, 166, anchoPagina);
       pdf.save('reporte_humedad_suelo.pdf');
       return;
     }
 
-    if (tipo === 'gdd') {
-      pdf.text('Reporte Histórico GDD', 15, 15);
+    const serie = this.historico?.serie || [];
+    const totalDias = serie.length;
+    const promedio =
+      totalDias > 0
+        ? serie.reduce(
+            (a: number, b: any) => a + Number(b.gdd || 0),
+            0
+          ) / totalDias
+        : 0;
+    const maxGdd =
+      totalDias > 0
+        ? Math.max(...serie.map((x: any) => Number(x.gdd || 0)))
+        : 0;
+    const minGdd =
+      totalDias > 0
+        ? Math.min(...serie.map((x: any) => Number(x.gdd || 0)))
+        : 0;
 
-      pdf.setFontSize(10);
-      pdf.text(`Lat: ${this.lat}`, 15, 25);
-      pdf.text(`Lon: ${this.lon}`, 80, 25);
-      pdf.text(`Fecha inicio: ${this.fechaInicio}`, 150, 25);
-      pdf.text(`Fecha fin: ${this.fechaFin}`, 220, 25);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(17);
+    pdf.setTextColor(23, 59, 31);
+    pdf.text('Reporte Histórico GDD', 15, 14);
 
-     const serie = this.historico?.serie || [];
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(9.5);
+    pdf.text(`Lat: ${this.lat}`, 15, 23);
+    pdf.text(`Lon: ${this.lon}`, 72, 23);
+    pdf.text(`Fecha inicio: ${this.fechaInicio}`, 130, 23);
+    pdf.text(`Fecha fin: ${this.fechaFin}`, 205, 23);
 
-const totalDias = serie.length;
+    pdf.setFillColor(238, 247, 238);
+    pdf.setDrawColor(112, 170, 112);
+    pdf.roundedRect(15, 31, 267, 22, 2, 2, 'FD');
 
-const promedio =
-  totalDias > 0
-    ? serie.reduce(
-        (a: number, b: any) => a + Number(b.gdd || 0),
-        0
-      ) / totalDias
-    : 0;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(27, 94, 32);
+    pdf.setFontSize(12);
+    pdf.text(`GDD acumulado: ${this.gddAcumulado.toFixed(2)}`, 20, 40);
 
-const maxGdd =
-  totalDias > 0
-    ? Math.max(...serie.map((x: any) => Number(x.gdd || 0)))
-    : 0;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(8.5);
+    pdf.text(`Cultivo: ${this.cultivoGdd.toUpperCase()}`, 20, 48);
+    pdf.text(`Registros: ${totalDias}`, 75, 48);
+    pdf.text(`Promedio: ${promedio.toFixed(2)}`, 115, 48);
+    pdf.text(`Mínimo: ${minGdd.toFixed(2)}`, 160, 48);
+    pdf.text(`Máximo: ${maxGdd.toFixed(2)}`, 205, 48);
 
-const minGdd =
-  totalDias > 0
-    ? Math.min(...serie.map((x: any) => Number(x.gdd || 0)))
-    : 0;
-
-pdf.setFont('helvetica', 'bold');
-pdf.setTextColor(27, 94, 32);
-pdf.setFontSize(14);
-pdf.text(`GDD acumulado: ${this.gddAcumulado.toFixed(2)}`, 15, 40);
-
-pdf.setFont('helvetica', 'normal');
-pdf.setTextColor(0, 0, 0);
-pdf.setFontSize(10);
-pdf.text(`Cultivo: ${this.cultivoGdd.toUpperCase()}`, 15, 48);
-pdf.text(`Total registros: ${totalDias}`, 15, 56);
-pdf.text(`GDD promedio: ${promedio.toFixed(2)}`, 15, 64);
-pdf.text(`GDD mínimo: ${minGdd.toFixed(2)}`, 15, 72);
-pdf.text(`GDD máximo: ${maxGdd.toFixed(2)}`, 15, 80);
-
-      pdf.addImage(
-  img,
-  'PNG',
-  70,
-  85,
-  200,
-  100
-);
-
-      pdf.save('reporte_historico_gdd.pdf');
-    }
+    pdf.addImage(img, 'PNG', 20, 59, 257, 101);
+    this.agregarDescargoPDF(pdf, 166, anchoPagina);
+    pdf.save('reporte_historico_gdd.pdf');
   }
 }
