@@ -616,14 +616,14 @@ this.actualizarGraficaHumedad(resp);
       if (esOptimo) {
         return (
           'Máxima transpiración y fotosíntesis. Existe riesgo de asfixia ' +
-          'radicular únicamente si el suelo permanece saturado durante demasiado tiempo.'
+          'radicular únicamente si el suelo se mantiene en 100% durante demasiado tiempo.'
         );
       }
 
       if (esConfort) {
         return (
           'Los estomas comienzan a cerrarse parcialmente. Cultivos como maíz, ' +
-          'sorgo y trigo presentan poca afectación.'
+          'sorgo y trigo no presentan afectación.'
         );
       }
 
