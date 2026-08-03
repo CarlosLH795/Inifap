@@ -1,0 +1,8 @@
+{
+  "/wrf-api": {
+    "target": "https://clima.inifap.gob.mx",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

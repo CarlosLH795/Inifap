@@ -1,21 +1,149 @@
 <app-navbar></app-navbar>
+
 <section class="intro">
-  <h1>Innovación digital que lee el clima y entiende el suelo.</h1>
+  <h1>
+    Innovación digital que lee el clima y entiende el suelo.
+  </h1>
+
   <p>
-    El tablero Edafoclimático Digital es un servicio web interactivo y responsivo del INIFAP que integra ciencia de datos y desarrollo 
-    avanzando para optimizar la toma de desiciones en el sector agropecuario
+    El tablero Edafoclimático Digital es un servicio web
+    interactivo y responsivo del INIFAP que integra ciencia
+    de datos y desarrollo avanzado para optimizar la toma
+    de decisiones en el sector agropecuario.
   </p>
 </section>
 
-<section class="map-card">
-  <div id="map"></div>
+<!--
+  El panel aparece únicamente cuando el usuario tiene
+  por lo menos un punto guardado.
+-->
+<section
+  class="puntos-guardados-panel"
+  *ngIf="
+    puedeGestionarPuntos &&
+    puntosGuardados.length > 0
+  "
+>
+  <div class="puntos-guardados-encabezado">
+    <div>
+      <h3>Datos coordenados guardados</h3>
+
+      <small>
+        {{ totalPuntosGuardados }}
+        de
+        {{ limitePuntosGuardados }}
+      </small>
+    </div>
+
+    <button
+      type="button"
+      class="boton-recargar-puntos"
+      title="Actualizar dato guardados"
+      [disabled]="cargandoPuntosGuardados"
+      (click)="cargarPuntosGuardados()"
+    >
+      Actualizar
+    </button>
+  </div>
+
+  <div class="lista-puntos-guardados">
+    <article
+      class="punto-guardado-item"
+      *ngFor="let punto of puntosGuardados"
+    >
+      <button
+        type="button"
+        class="boton-ir-punto"
+        title="Abrir este dato en el dashboard"
+        (click)="irAPuntoGuardado(punto)"
+      >
+        <strong>
+          {{ punto.nombre }}
+        </strong>
+
+        <small>
+          {{ punto.latitud | number:'1.4-4' }},
+          {{ punto.longitud | number:'1.4-4' }}
+        </small>
+      </button>
+
+      <div class="acciones-punto-guardado">
+        <button
+          type="button"
+          class="boton-renombrar-punto"
+          title="Renombrar dato"
+          aria-label="Renombrar dato guardado"
+          (click)="renombrarPuntoGuardado(punto, $event)"
+        >
+          ✎
+        </button>
+
+        <button
+          type="button"
+          class="boton-eliminar-punto"
+          title="Eliminar dato"
+          aria-label="Eliminar dato guardado"
+          (click)="eliminarPuntoGuardado(punto, $event)"
+        >
+          ×
+        </button>
+      </div>
+    </article>
+  </div>
 </section>
 
+<!--
+  Se conserva altura inline porque fue la configuración
+  que permitió que Leaflet se mostrara correctamente.
+-->
+<section
+  class="map-card"
+  style="
+    width: calc(100% - 40px);
+    max-width: 1100px;
+    height: 650px;
+    margin: 0 auto 30px auto;
+    padding: 12px;
+    box-sizing: border-box;
+    background: white;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  "
+>
+  <div
+    id="map"
+    style="
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 620px;
+      border-radius: 14px;
+      overflow: hidden;
+    "
+  ></div>
+</section>
 
 <section class="intro">
   <p>
-   <em>
-    El presente tablero digital es una herramienta de apoyo para la interpretación de datos climáticos y edáficos, desarrollada con fines académicos, técnicos y de investigación. Los valores mostrados (humedad del suelo, déficit de presión de vapor y evapotranspiración potencial) se derivan de simulaciones numéricas realizadas con el modelo WRF y de fuentes de datos complementarias. Este tablero no constituye un pronóstico oficial del clima ni sustituye la información emitida por el Servicio Meteorológico Nacional, autoridad designada en México para la generación y difusión de pronósticos meteorológicos. Los desarrolladores y la institución responsable no asumen responsabilidad legal por el uso que los usuarios hagan de la información aquí presentada, ni por decisiones operativas, productivas o comerciales que se deriven de ella. Se recomienda a los usuarios consultar siempre las fuentes oficiales para fines de planeación y gestión.
-   </em> 
+    <em>
+      El presente tablero digital es una herramienta de apoyo
+      para la interpretación de datos climáticos y edáficos,
+      desarrollada con fines académicos, técnicos y de
+      investigación. Los valores mostrados (humedad del suelo,
+      déficit de presión de vapor y evapotranspiración
+      potencial) se derivan de simulaciones numéricas
+      realizadas con el modelo WRF y de fuentes de datos
+      complementarias. Este tablero no constituye un
+      pronóstico oficial del clima ni sustituye la información
+      emitida por el Servicio Meteorológico Nacional,
+      autoridad designada en México para la generación y
+      difusión de pronósticos meteorológicos. Los
+      desarrolladores y la institución responsable no asumen
+      responsabilidad legal por el uso que los usuarios hagan
+      de la información aquí presentada, ni por decisiones
+      operativas, productivas o comerciales que se deriven de
+      ella. Se recomienda a los usuarios consultar siempre las
+      fuentes oficiales para fines de planeación y gestión.
+    </em>
   </p>
 </section>
