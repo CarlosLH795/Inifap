@@ -1,23 +1,44 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit
+} from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-import { AuthService } from '../services/auth.services';
+import {
+  AuthService
+} from '../services/auth.services';
+
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, CommonModule],
+  imports: [
+    FormsModule,
+    CommonModule
+  ],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
+export class Login implements
+  OnInit,
+  AfterViewInit,
+  OnDestroy {
 
   usuario = '';
   password = '';
   error = '';
+  avisoSesion = '';
   captchaToken = '';
   turnstileWidgetId: any = null;
+
+  private intervaloTurnstile:
+    ReturnType<typeof setInterval> |
+    null = null;
+
 
   constructor(
     private authService: AuthService,
@@ -26,110 +47,149 @@ export class Login {
   ) {}
 
 
-
-ngAfterViewInit(): void {
-  const interval = setInterval(() => {
-
-    if ((window as any).turnstile) {
-
-      clearInterval(interval);
-
-      this.turnstileWidgetId =
-        (window as any).turnstile.render(
-          '#turnstile-container',
-          {
-            sitekey: '0x4AAAAAADnymYYNSGiPFpPi',
-            theme: 'light',
-
-            callback: (token: string) => {
-
-              console.log('CAPTCHA TOKEN:', token);
-
-              // disponible desde F12
-              (window as any).captchaToken = token;
-
-              this.captchaToken = token;
-
-              this.cdr.detectChanges();
-            },
-
-            'expired-callback': () => {
-
-              console.log('CAPTCHA EXPIRADO');
-
-              this.captchaToken = '';
-              (window as any).captchaToken = '';
-
-              this.cdr.detectChanges();
-            },
-
-            'error-callback': () => {
-
-              console.error('ERROR TURNSTILE');
-
-              this.captchaToken = '';
-              (window as any).captchaToken = '';
-
-              this.cdr.detectChanges();
-            }
-          }
-        );
-    }
-
-  }, 300);
-}
-
   ngOnInit(): void {
-  (window as any).onCaptchaSuccess = (token: string) => {
+    this.avisoSesion =
+      sessionStorage.getItem(
+        'mensaje_sesion'
+      ) ?? '';
 
-    console.log('TOKEN CAPTCHA:', token);
-    this.captchaToken = token;
-    this.cdr.detectChanges();
-  };
-}
-  entrar(): void {
-  this.error = '';
+    sessionStorage.removeItem(
+      'mensaje_sesion'
+    );
 
-  //descomentar para activar el captcha
-  if (!this.captchaToken) {
-    this.error = 'Por favor completa el captcha.';
-    return;
+    (window as any).onCaptchaSuccess = (
+      token: string
+    ) => {
+      this.captchaToken = token;
+      this.cdr.detectChanges();
+    };
   }
 
-  this.authService.login(this.usuario, this.password, this.captchaToken)
-    .subscribe({
+
+  ngAfterViewInit(): void {
+    this.intervaloTurnstile = setInterval(
+      () => {
+        if (!(window as any).turnstile) {
+          return;
+        }
+
+        this.detenerIntervaloTurnstile();
+
+        this.turnstileWidgetId =
+          (window as any).turnstile.render(
+            '#turnstile-container',
+            {
+              sitekey:
+                '0x4AAAAAADnymYYNSGiPFpPi',
+              theme: 'light',
+
+              callback: (token: string) => {
+                this.captchaToken = token;
+                this.cdr.detectChanges();
+              },
+
+              'expired-callback': () => {
+                this.captchaToken = '';
+                this.cdr.detectChanges();
+              },
+
+              'error-callback': () => {
+                this.captchaToken = '';
+                this.cdr.detectChanges();
+              }
+            }
+          );
+      },
+      300
+    );
+  }
+
+
+  ngOnDestroy(): void {
+    this.detenerIntervaloTurnstile();
+    delete (window as any).onCaptchaSuccess;
+  }
+
+
+  entrar(): void {
+    this.error = '';
+    this.avisoSesion = '';
+
+    if (!this.captchaToken) {
+      this.error =
+        'Por favor completa el captcha.';
+      return;
+    }
+
+    this.authService.login(
+      this.usuario,
+      this.password,
+      this.captchaToken
+    ).subscribe({
       next: () => {
         this.router.navigate(['/']);
       },
+
       error: (err) => {
-        console.error('Error login:', err);
+        console.error(
+          'Error login:',
+          err
+        );
 
         this.error =
           err?.error?.detail ||
           'El usuario o la contraseña son incorrectos.';
 
-          // Resetear captcha
-      if ((window as any).turnstile && this.turnstileWidgetId !== null) {
-        (window as any).turnstile.reset(this.turnstileWidgetId);
-        this.captchaToken = '';
-      }
+        if (
+          (window as any).turnstile &&
+          this.turnstileWidgetId !== null
+        ) {
+          (window as any).turnstile.reset(
+            this.turnstileWidgetId
+          );
+
+          this.captchaToken = '';
+        }
 
         this.cdr.detectChanges();
       }
     });
-}
+  }
 
 
   abrirCorreoSoporte(): void {
     const correo = 'TU_CORREO@DOMINIO.COM';
-    const asunto = encodeURIComponent('Ayuda para ingresar a WRF Agro');
+
+    const asunto = encodeURIComponent(
+      'Ayuda para ingresar a WRF Agro'
+    );
+
     const cuerpo = encodeURIComponent(
-      `Hola, tengo problemas para iniciar sesión en WRF Agro.\n\nUsuario: ${this.usuario}`
+      'Hola, tengo problemas para iniciar sesión ' +
+      'en WRF Agro.\n\nUsuario: ' +
+      this.usuario
     );
 
     window.open(
-      `https://mail.google.com/mail/?view=cm&fs=1&to=${correo}&su=${asunto}&body=${cuerpo}`,
+      'https://mail.google.com/mail/' +
+      '?view=cm&fs=1' +
+      '&to=' + correo +
+      '&su=' + asunto +
+      '&body=' + cuerpo,
       '_blank'
     );
+  }
+
+
+  private detenerIntervaloTurnstile(): void {
+    if (!this.intervaloTurnstile) {
+      return;
+    }
+
+    clearInterval(
+      this.intervaloTurnstile
+    );
+
+    this.intervaloTurnstile = null;
   }
 }

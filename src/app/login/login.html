@@ -2,59 +2,83 @@
 
   <div class="login-card">
 
-   <h1>Tablero Digital de Alerta Temprana</h1>
-<p class="subtitle">
-  Plataforma Agroclimática de Monitoreo y Pronóstico
-</p>
+    <h1>Tablero Digital de Alerta Temprana</h1>
 
-    <label class="input-label">Usuario</label>
-<input
-  type="text"
-  placeholder="Ingrese su usuario"
-  [(ngModel)]="usuario">
+    <p class="subtitle">
+      Plataforma Agroclimática de Monitoreo y Pronóstico
+    </p>
 
-<label class="input-label">Contraseña</label>
-<input
-  type="password"
-  placeholder="Ingrese su contraseña"
-  [(ngModel)]="password"
-  (keyup.enter)="entrar()">
-<br>
-<br>
+    @if (avisoSesion !== '') {
+      <div class="login-error">
+        <strong>Sesión finalizada</strong>
+        <p>{{ avisoSesion }}</p>
+      </div>
+    }
 
-<div id="turnstile-container"></div>
+    <label class="input-label">
+      Usuario
+    </label>
 
+    <input
+      type="text"
+      placeholder="Ingrese su usuario"
+      [(ngModel)]="usuario"
+    >
+
+    <label class="input-label">
+      Contraseña
+    </label>
+
+    <input
+      type="password"
+      placeholder="Ingrese su contraseña"
+      [(ngModel)]="password"
+      (keyup.enter)="entrar()"
+    >
+
+    <br>
+    <br>
+
+    <div id="turnstile-container"></div>
 
     <button
       type="button"
-      (click)="entrar()">
+      (click)="entrar()"
+    >
       Entrar
     </button>
 
-   
-
     @if (error !== '') {
-  <div class="login-error">
-    <strong>No se pudo iniciar sesión</strong>
-    <p>{{ error }}</p>
-  </div>
-}
+      <div class="login-error">
+        <strong>No se pudo iniciar sesión</strong>
+        <p>{{ error }}</p>
+      </div>
+    }
 
     <div class="help-box">
-      <span>¿Tienes problemas para ingresar?</span>
+      <span>
+        ¿Tienes problemas para ingresar?
+      </span>
 
       <button
         type="button"
         class="help-btn"
-        (click)="abrirCorreoSoporte()">
+        (click)="abrirCorreoSoporte()"
+      >
         Solicitar ayuda
       </button>
     </div>
 
     <div class="help-box">
-      <span>¿Quieres solicitar acceso?</span>
-      <br><span>Envia un mail a la dirección up130467@gmail.com, con el asunto: Acceso HMS, y todos tus datos</span>
-      
+      <span>
+        ¿Quieres solicitar acceso?
+      </span>
+      <br>
+      <span>
+        Envía un correo a la dirección
+        up130467@gmail.com, con el asunto:
+        Acceso HMS, y todos tus datos.
+      </span>
     </div>
 
   </div>
