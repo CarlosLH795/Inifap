@@ -1,37 +1,41 @@
-import { Component, inject } from '@angular/core';
+import {
+  Component,
+  inject,
+} from '@angular/core';
+
 import { Router } from '@angular/router';
 
-import { Auth } from '../auth';
 import { AuthService } from '../services/auth.services';
 
 @Component({
   selector: 'app-navbar',
   imports: [],
   templateUrl: './navbar.html',
-  styleUrl: './navbar.css'
+  styleUrl: './navbar.css',
 })
 export class Navbar {
+  private readonly router = inject(Router);
 
-  private router = inject(Router);
-  private auth = inject(Auth);
+  public readonly authService =
+    inject(AuthService);
 
-  // NUEVO
-  public authService = inject(AuthService);
+  irAcercaDe(): void {
+    this.router.navigate(['/acerca-de']);
+  }
 
-  irMapa() {
+  irMapa(): void {
     this.router.navigate(['/']);
   }
 
-  irDashboard() {
+  irDashboard(): void {
     this.router.navigate(['/dashboard']);
   }
 
-  // NUEVO
-  irUsuarios() {
+  irUsuarios(): void {
     this.router.navigate(['/admin/usuarios']);
   }
 
-  logout() {
+  logout(): void {
     localStorage.clear();
     this.router.navigate(['/login']);
   }

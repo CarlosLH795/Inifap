@@ -1,0 +1,373 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f4f7f1;
+  color: #10281b;
+}
+
+.topbar {
+  position: sticky;
+  z-index: 1000;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 70px;
+  padding: 0 24px;
+  background: #1d2938;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+}
+
+.brand-logo {
+  display: block;
+  width: 82px;
+  max-height: 48px;
+  object-fit: contain;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-button {
+  padding: 10px 17px;
+  border: 1px solid #d9dee5;
+  border-radius: 9px;
+  background: #fff;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.nav-button:hover {
+  border-color: #31843a;
+  background: #edf6e9;
+  color: #18572b;
+}
+
+.nav-button.active {
+  border-color: #7da5da;
+  box-shadow: 0 0 0 1px #7da5da;
+}
+
+.about-page {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 50px 0 60px;
+}
+
+.about-heading {
+  max-width: 850px;
+  margin-bottom: 30px;
+}
+
+.section-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #287638;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.about-heading h1 {
+  margin: 0;
+  color: #102d1e;
+  font-size: clamp(32px, 5vw, 48px);
+  line-height: 1.08;
+}
+
+.heading-description {
+  max-width: 720px;
+  margin: 14px 0 0;
+  color: #607064;
+  font-size: 18px;
+  line-height: 1.55;
+}
+
+.about-card {
+  border: 1px solid #dbe6d8;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(23 59 35 / 7%);
+}
+
+.project-card {
+  position: relative;
+  overflow: hidden;
+  padding: 30px 34px;
+}
+
+.card-accent {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 7px;
+  background: #31843a;
+}
+
+.project-card h2,
+.content-section h2 {
+  margin: 0 0 12px;
+  color: #123923;
+  font-size: 25px;
+}
+
+.project-card p {
+  max-width: 940px;
+  margin: 0 0 13px;
+  color: #46574a;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.project-data {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 5px 0 15px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #e8f3e4;
+  color: #174f29;
+}
+
+.data-label {
+  color: #58715d;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.content-section {
+  margin-top: 50px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section-heading h2 {
+  margin-bottom: 5px;
+}
+
+.section-heading p {
+  margin: 0;
+  color: #66736a;
+  line-height: 1.5;
+}
+
+.section-number {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  place-items: center;
+  background: #286f37;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.recognition-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 20px;
+}
+
+.recognition-card {
+  padding: 26px;
+}
+
+.recognition-title {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 17px;
+}
+
+.recognition-title h3 {
+  margin: 0;
+  color: #173b25;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.recognition-icon,
+.technical-icon {
+  display: grid;
+  flex: 0 0 50px;
+  width: 50px;
+  height: 50px;
+  border-radius: 13px;
+  place-items: center;
+  background: #1e6b35;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.recognition-icon.soil {
+  background: #8a6721;
+}
+
+.recognition-card p {
+  margin: 0 0 12px;
+  color: #526056;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.people-grid,
+.technical-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.person-card,
+.technical-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border: 1px solid #dbe6d8;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.person-initials {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  place-items: center;
+  background: #e5f1e1;
+  color: #206534;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.person-card h3,
+.technical-card h3 {
+  margin: 0 0 4px;
+  color: #173b25;
+  font-size: 16px;
+}
+
+.person-card p,
+.technical-card p {
+  margin: 0;
+  color: #68756b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.technical-card {
+  align-items: flex-start;
+}
+
+.technical-card.featured {
+  border-color: #8fc895;
+  background: #f4faf1;
+}
+
+.technical-card:nth-child(2) .technical-icon {
+  background: #315f7e;
+}
+
+.technical-card:nth-child(3) .technical-icon {
+  background: #6e6530;
+}
+
+.technical-card:nth-child(4) .technical-icon {
+  background: #76517a;
+}
+
+.institutional-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px max(24px, calc((100% - 1180px) / 2));
+  background: #173b25;
+  color: #cbdccc;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 800px) {
+  .topbar {
+    padding: 0 14px;
+  }
+
+  .topbar-actions {
+    gap: 7px;
+  }
+
+  .nav-button {
+    padding: 8px 11px;
+    font-size: 13px;
+  }
+
+  .about-page {
+    width: min(100% - 28px, 1180px);
+    padding: 34px 0 44px;
+  }
+
+  .project-card {
+    padding: 24px;
+  }
+
+  .recognition-grid,
+  .people-grid,
+  .technical-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .institutional-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 500px) {
+  .brand-logo {
+    width: 65px;
+  }
+
+  .nav-button {
+    padding: 8px 9px;
+  }
+
+  .about-heading h1 {
+    font-size: 31px;
+  }
+
+  .heading-description {
+    font-size: 16px;
+  }
+
+  .recognition-card {
+    padding: 21px;
+  }
+}

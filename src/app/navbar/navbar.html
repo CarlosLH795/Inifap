@@ -1,18 +1,42 @@
 <nav class="navbar">
-
   <div class="left">
-     <img src="assets/images/logini.png" class="logo" alt="Logo"> 
-    <!--<span class="title">INIFAP</span>-->
+    <img
+      src="assets/images/logini.png"
+      class="logo"
+      alt="Logotipo de INIFAP"
+    />
   </div>
 
   <div class="right">
-    <button (click)="irMapa()">Mapa</button>
-    @if (authService.esAdmin()) {
-  <button (click)="irUsuarios()">
-    Usuarios
-  </button>
-}
-    <button class="logout" (click)="logout()">Logout</button>
-  </div>
+    <button
+      type="button"
+      (click)="irAcercaDe()"
+    >
+      Acerca de…
+    </button>
 
+    <button
+      type="button"
+      (click)="irMapa()"
+    >
+      Mapa
+    </button>
+
+    @if (authService.esAdmin()) {
+      <button
+        type="button"
+        (click)="irUsuarios()"
+      >
+        Usuarios
+      </button>
+    }
+
+    <button
+      type="button"
+      class="logout"
+      (click)="logout()"
+    >
+      Logout
+    </button>
+  </div>
 </nav>
