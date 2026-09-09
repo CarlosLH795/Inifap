@@ -14,6 +14,15 @@ import { AuthService } from '../services/auth.services';
   styleUrl: './navbar.css',
 })
 export class Navbar {
+  menuAbierto = false;
+
+alternarMenu(): void {
+  this.menuAbierto = !this.menuAbierto;
+}
+
+cerrarMenu(): void {
+  this.menuAbierto = false;
+}
   private readonly router = inject(Router);
 
   public readonly authService =

@@ -6,18 +6,26 @@
       alt="Logotipo de INIFAP"
     />
   </div>
-
-  <div class="right">
+<button
+  type="button"
+  class="menu-toggle"
+  (click)="alternarMenu()"
+  [attr.aria-expanded]="menuAbierto"
+  aria-label="Abrir menú de navegación"
+>
+  {{ menuAbierto ? '✕' : '☰' }}
+</button>
+  <div class="right nav-links" [class.menu-abierto]="menuAbierto">
     <button
       type="button"
-      (click)="irAcercaDe()"
+      (click)="irAcercaDe(); cerrarMenu()"
     >
       Acerca de…
     </button>
 
     <button
       type="button"
-      (click)="irMapa()"
+      (click)="irMapa(); cerrarMenu()"
     >
       Mapa
     </button>
@@ -25,7 +33,7 @@
     @if (authService.esAdmin()) {
       <button
         type="button"
-        (click)="irUsuarios()"
+        (click)="irUsuarios(); cerrarMenu()"
       >
         Usuarios
       </button>
@@ -34,7 +42,7 @@
     <button
       type="button"
       class="logout"
-      (click)="logout()"
+      (click)="logout(); cerrarMenu()"
     >
       Logout
     </button>
