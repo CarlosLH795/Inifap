@@ -1,481 +1,958 @@
 <app-navbar></app-navbar>
+
 <div *ngIf="cargando" class="loading-screen">
+
   <div class="loader-card">
-    
+
+
+
      <h2>Cargando información agroclimática...</h2>
 
+
+
     <p>
+
       Consultando WRF vigente y humedad de suelo.
+
     </p>
 
+
+
     <div class="progress-container">
+
       <div class="progress-bar"></div>
+
     </div>
 
+
+
 <button *ngIf="errorCarga" (click)="volverMapa()">
+
   Volver al mapa
+
 </button>
+
   </div>
-  
+
+
+
 </div>
 
+
+
 <div *ngIf="!cargando" class="dashboard">
- 
+
+
+
+
 
   <aside class="sidebar">
 
+
+
     <div class="sidebar-logo">
+
   <img
+
     src="assets/images/logini.png"
+
     alt="INIFAP"
+
   >
+
 </div>
+
+
 
     <button class="back-btn" (click)="volverMapa()">
+
       ← Volver al mapa
+
     </button>
 
+
+
     <div class="weather-main">
+
       <p>Temperatura promedio del día</p>
+
       <h1>{{ diaActual?.temp | number:'1.2-2' }}°C</h1>
-      
+
+
+
     </div>
+
+
 
     <div class="location">
+
       <span>Dato coordenado</span>
+
       <p><b>Lat:</b> {{ lat | number:'1.4-4' }}</p>
+
       <p><b>Lon:</b> {{ lon | number:'1.4-4' }}</p>
+
       </div>
+
       <br>
+
       <div class="location">
 
-      
+
+
+
+
       <div class="uso-suelo-coordenada">
+
   <span class="uso-suelo-etiqueta">
+
     Uso de suelo:
+
   </span>
 
+
+
   <strong>
+
     {{
+
       usoSuelo?.descripcion
+
       || 'Sin clasificación disponible'
+
     }}
+
   </strong>
 
+
+
   <small *ngIf="usoSuelo?.clave">
+
     Conjunto de datos vectoriales de la carta de Uso del suelo y vegetación. Escala 1:250 000. Serie VI. Conjunto Nacional, INEGI - Geografia y medio ambiente - Uso de suelo y vegetación
+
   </small>
+
 </div>
+
     </div>
+
 <br>
+
      <div class="location">
+
       <small>
+
         Descargo de responsabilidad:
+
       </small>
+
       <br>
+
       <small style="color: #cfd8cf;  font-size: 11px;  font-weight: 200;">
+
    El presente tablero digital es una herramienta de apoyo para la interpretación de datos climáticos y edáficos, desarrollada con fines académicos, técnicos y de investigación. Los valores mostrados (humedad del suelo, déficit de presión de vapor y evapotranspiración potencial) se derivan de simulaciones numéricas realizadas con el modelo WRF y de fuentes de datos complementarias. Este tablero no constituye un pronóstico oficial del clima ni sustituye la información emitida por el Servicio Meteorológico Nacional, autoridad designada en México para la generación y difusión de pronósticos meteorológicos. Los desarrolladores y la institución responsable no asumen responsabilidad legal por el uso que los usuarios hagan de la información aquí presentada, ni por decisiones operativas, productivas o comerciales que se deriven de ella. Se recomienda a los usuarios consultar siempre las fuentes oficiales para fines de planeación y gestión.
+
   </small>
+
      </div>
+
+
 
   </aside>
 
+
+
   <main class="content">
 
+
+
     <div class="topbar">
+
       <div>
+
         <h1>Tablero Digital Agrometeorológico</h1>
+
         <p>Resumen Edafoclimático; WRF, SoilGrids, INIFAP</p>
+
         <p class="fecha-dashboard">
+
           Pronóstico Meteorológico a Cinco Días
+
         </p>
+
       </div>
+
     </div>
+
+
 
     <section class="forecast-strip" *ngIf="pronosticoResumen.length">
 
+
+
   <div class="forecast-day" *ngFor="let d of pronosticoResumen">
+
     <h4>{{ d.fecha }}</h4>
 
+
+
     <div class="forecast-values">
+
       <span>🌡️ Máx: {{ d.tmax | number:'1.1-1' }}°C</span>
+
       <span>❄️ Mín: {{ d.tmin | number:'1.1-1' }}°C</span>
+
       <span>🌧️ Lluvia: {{ d.rain | number:'1.1-1' }} mm</span>
+
       <span>💧 HR: {{ d.rh | number:'1.0-0' }}%</span>
+
     </div>
+
   </div>
+
+
 
 </section>
 
+
+
     <section class="grid">
+
+
 
         <div class="panel large humedad-panel">
 
+
+
         <div class="titulo-con-ayuda">
+
   <h3>Humedad de suelo</h3>
 
+
+
   <span
+
     class="icono-ayuda"
+
     tabindex="0"
+
     aria-label="Información sobre el agua útil disponible"
+
   >
+
     i
 
+
+
     <span class="tooltip-ayuda">
+
       El Agua Útil Disponible (AUD) representa la proporción de humedad
+
       almacenada entre el Punto de Marchitez Permanente (PMP) y la
+
       Capacidad de Campo (CC). Permite estimar cuánta agua puede utilizar
+
       realmente el cultivo.
+
     </span>
+
   </span>
+
 </div>
+
+
 
         <div class="humidity-controls">
+
           <p>Selecciona una opción para Humedad del suelo:</p>
+
         <br/>
+
          <select
+
   [(ngModel)]="profundidad"
+
   (change)="cambiarProfundidad()"
+
 >
+
   <option value="0_10">
+
     Humedad de suelo 0-10 cm
+
   </option>
+
+
 
   <option value="10_40">
+
     Humedad de suelo 10-40 cm
+
   </option>
+
+
 
   <option value="40_100">
+
     Humedad de suelo 40-100 cm
+
   </option>
+
+
 
   <option value="100_200">
+
     Humedad de suelo 100-200 cm
+
   </option>
+
 </select>
+
         </div>
+
+
 
         <p *ngIf="humedad" class="humidity-reference">
+
           Estado: {{ humedad.estado.nom_ent }} |
+
           PMP: {{ humedad.referencia.pmp }} |
+
           CC: {{ humedad.referencia.cc }}
+
         </p>
 
+
+
        <div
+
   class="aud-card"
+
   [ngClass]="audClase"
+
 >
+
   <div class="aud-valor">
+
     {{ aud | number:'1.0-1' }}%
+
   </div>
+
+
 
   <div class="aud-info">
+
     <div class="aud-etiqueta">
+
       Agua útil disponible
+
     </div>
+
+
 
     <div class="aud-titulo">
+
       {{ audTitulo }}
+
     </div>
+
+
 
     <div class="aud-mensaje">
+
       {{ audMensaje }}
+
     </div>
+
+
 
     <div class="aud-datos">
+
       <span>
+
         Humedad WRF:
+
         {{ humedadActualAud | number:'1.4-4' }} m³/m³
+
       </span>
 
+
+
       <span>
+
         PMP:
+
         {{ humedad?.referencia?.pmp | number:'1.4-4' }} m³/m³
+
       </span>
 
+
+
       <span>
+
         CC:
+
         {{ humedad?.referencia?.cc | number:'1.4-4' }} m³/m³
+
       </span>
+
     </div>
+
   </div>
+
 </div>
 
+
+
         <div class="chart-box" *ngIf="humedad">
+
           @if (authService.puedeDescargar()) {
+
             <div class="chart-actions">
+
               <button (click)="descargarGraficaPNG('humedad')">PNG</button>
+
               <button (click)="descargarCSV('humedad')">CSV</button>
+
               <button (click)="descargarPDF('humedad')">PDF</button>
+
             </div>
+
           }
 
+
+
           <div class="chart-canvas-wrap">
+
             <canvas
+
               baseChart
+
               #humedadChart="base-chart"
+
               [data]="humedadChartData"
+
               [options]="humedadChartOptions"
+
               [type]="'bar'"
+
             ></canvas>
+
           </div>
+
         </div>
+
       </div>
+
+
 
 <div class="panel indicadores-panel">
 
+
+
   <section class="indicador-seccion">
+
+
 
     <div class="titulo-con-ayuda">
+
   <h3>Déficit de presión de vapor</h3>
 
+
+
   <span
+
     class="icono-ayuda"
+
     tabindex="0"
+
     aria-label="Información sobre el déficit de presión de vapor"
+
   >
+
     i
 
+
+
     <span class="tooltip-ayuda">
+
       Estima la “sed” del aire calculando la diferencia entre la humedad
+
       real y la máxima cantidad de vapor que el aire puede retener a una
+
       temperatura determinada.
+
     </span>
+
   </span>
+
 </div>
 
+
+
     <div
+
       class="indicador-atmosferico vpd-card"
+
       [ngClass]="vpdClase"
+
     >
+
       <div class="indicador-valor">
+
         <ng-container *ngIf="vpdActual !== null; else sinVpd">
+
           {{ vpdActual | number:'1.2-2' }}
+
           <small>kPa</small>
+
         </ng-container>
 
+
+
         <ng-template #sinVpd>
+
           —
+
         </ng-template>
+
       </div>
+
+
 
       <div class="indicador-info">
+
         <div class="indicador-titulo">
+
           {{ vpdTitulo }}
+
         </div>
+
+
 
         <div class="indicador-mensaje">
+
           {{ vpdMensaje }}
+
         </div>
+
+
 
         <div class="indicador-datos">
-          <span>
-            Temperatura:
-            {{ diaActual?.temp | number:'1.1-1' }} °C
-          </span>
 
           <span>
-            HR:
-            {{ diaActual?.rh | number:'1.0-0' }} %
+
+            Temperatura:
+
+            {{ diaActual?.temp | number:'1.1-1' }} °C
+
           </span>
+
+
+
+          <span>
+
+            HR:
+
+            {{ diaActual?.rh | number:'1.0-0' }} %
+
+          </span>
+
         </div>
+
       </div>
+
     </div>
+
     <div class="indicador-pronostico">
+
   <div class="indicador-pronostico-titulo">
+
     Pronóstico próximos días
+
   </div>
+
+
 
   <div class="indicador-pronostico-grid">
+
     <div
+
       *ngFor="let dia of pronosticoVpd.slice(1)"
+
       class="indicador-mini"
+
       [ngClass]="dia.clase"
+
     >
+
       <div class="indicador-mini-fecha">
+
         {{ dia.fecha | date:'dd MMM' }}
+
       </div>
+
+
 
       <div class="indicador-mini-valor">
+
         {{ dia.valor | number:'1.2-2' }}
+
         <small>kPa</small>
+
       </div>
+
+
 
       <div class="indicador-mini-titulo">
+
         {{ dia.titulo }}
+
       </div>
+
     </div>
+
   </div>
+
 </div>
 
+
+
   </section>
+
+
 
   <section class="indicador-seccion">
 
+
+
    <div class="titulo-con-ayuda">
+
   <h3>Evapotranspiración Potencial (ETP)</h3>
 
+
+
   <span
+
     class="icono-ayuda"
+
     tabindex="0"
+
     aria-label="Información sobre la evapotranspiración potencial"
+
   >
+
     i
 
+
+
     <span class="tooltip-ayuda">
+
       La Evapotranspiración Potencial (ETP) mide la máxima cantidad de agua
+
       que evapora desde el suelo y transpiraría desde una cobertura vegetal
+
       de referencia si no hubiera limitaciones de agua.
+
     </span>
+
   </span>
+
 </div>
+
+
 
     <div class="indicador-atmosferico et0-card">
+
       <div class="indicador-valor">
+
         <ng-container *ngIf="et0Actual !== null; else sinEt0">
+
           {{ et0Actual | number:'1.2-2' }}
+
           <small>mm/día</small>
+
         </ng-container>
 
+
+
         <ng-template #sinEt0>
+
           —
+
         </ng-template>
+
       </div>
+
+
 
       <div class="indicador-info">
+
         <div class="indicador-titulo">
+
           {{ et0Titulo }}
+
         </div>
+
+
 
         <div class="indicador-mensaje">
+
           {{ et0Mensaje }}
+
         </div>
+
+
 
         <div class="indicador-datos">
+
           <span>
+
             Tmax:
+
             {{ diaActual?.tmax | number:'1.1-1' }} °C
+
           </span>
 
+
+
           <span>
+
             Tmin:
+
             {{ diaActual?.tmin | number:'1.1-1' }} °C
+
           </span>
 
+
+
           <span>
+
             Ra:
+
             {{ radiacionExtraterrestreActual | number:'1.2-2' }}
+
             MJ/m²·día
+
           </span>
+
         </div>
+
       </div>
+
     </div>
+
 <div class="indicador-pronostico">
+
   <div class="indicador-pronostico-titulo">
+
     Pronóstico próximos días
+
   </div>
+
+
 
   <div class="indicador-pronostico-grid">
+
     <div
+
       *ngFor="let dia of pronosticoEt0.slice(1)"
+
       class="indicador-mini"
+
       [ngClass]="dia.clase"
+
     >
+
       <div class="indicador-mini-fecha">
+
         {{ dia.fecha | date:'dd MMM' }}
+
       </div>
+
+
 
       <div class="indicador-mini-valor">
+
         {{ dia.valor | number:'1.2-2' }}
+
         <small>mm/día</small>
+
       </div>
+
+
 
       <div class="indicador-mini-titulo">
+
         {{ dia.titulo }}
+
       </div>
+
     </div>
+
   </div>
+
 </div>
+
   </section>
 
+
+
 </div>
 
 
-     
-  
-      
+
+
+
+
+
+
+
+
+
      <div class="panel large gdd-panel">
+
         <h3>Histórico GDD</h3>
-        
+
+
+
         <div class="date-controls">
+
           <input type="date" [(ngModel)]="fechaInicio" [min]="fechaMinimaGdd" [max]="fechaMaximaGdd">
+
           <input type="date" [(ngModel)]="fechaFin" [min]="fechaMinimaGdd"  [max]="fechaMaximaGdd">
+
           <select [(ngModel)]="cultivoGdd" (change)="cargarHistorico()">
+
             <option value="maiz">Maíz</option>
+
             <option value="frijol">Frijol</option>
+
             <option value="sorgo">Sorgo</option>
+
           </select>
+
          <button (click)="cargarHistorico()" [disabled]="cargandoHistorico">
+
   {{ cargandoHistorico ? 'Consultando...' : 'Consultar histórico' }}
+
 </button>
+
         </div>
+
 <span style="text-align:center;  font-size: 13px;  color: #566656;">*solo se muestra consultas en un rango de 5 años, el rango de fechas influye directamente en cuanto puede tardar el sistema en mostrar la información</span>
+
         <div *ngIf="cargandoHistorico" class="gdd-loading">
+
   <div class="mini-loader"></div>
+
   <p>Cargando histórico GDD...</p>
+
 </div>
+
 <p *ngIf="errorHistorico" class="error-text">
+
   {{ errorHistorico }}
+
 </p>
 
 
-<div class="chart-box gdd-chart-box" *ngIf="!cargandoHistorico">
-  @if (authService.puedeDescargar()) {
-  <div class="chart-actions">
-  <button (click)="descargarGraficaPNG('gdd')">PNG</button>
-  <button (click)="descargarCSV('gdd')">CSV</button>
-  <button (click)="descargarPDF('gdd')">PDF</button>
-</div>
 
- 
+
+
+<div class="chart-box gdd-chart-box" *ngIf="!cargandoHistorico">
+
+  @if (authService.puedeDescargar()) {
+
+  <div class="chart-actions">
+
+  <button (click)="descargarGraficaPNG('gdd')">PNG</button>
+
+  <button (click)="descargarCSV('gdd')">CSV</button>
+
+  <button (click)="descargarPDF('gdd')">PDF</button>
+
+</div>
+}
+
 <div class="gdd-resumen" *ngIf="historico?.serie?.length">
 
+
+
   <div class="gdd-resumen-icono">
+
     🌱
+
   </div>
+
+
 
   <div class="gdd-resumen-info">
+
     <div class="gdd-resumen-titulo">
+
       GDD ACUMULADO
+
     </div>
+
+
 
     <div class="gdd-resumen-valor">
+
       {{ gddAcumulado | number:'1.2-2' }}
+
     </div>
+
+
 
     <div class="gdd-resumen-fechas">
+
       {{ fechaInicio | date:'dd MMM' }} - {{ fechaFin | date:'dd MMM' }}
+
     </div>
+
   </div>
 
+
+
 </div>
 
-}
+
+
+
+
  <canvas
+
   baseChart
+
   #gddChart="base-chart"
+
   [data]="gddChartData"
+
   [options]="gddChartOptions"
+
   [type]="'line'">
+
 </canvas>
+
 </div>
+
 </div>
 
 
 
 
-   
+
+
+
+
+
+
+
  </section>
+
   </main>
+
+
 
 </div>
